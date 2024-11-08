@@ -22,11 +22,13 @@ def load_model_from_s3():
 
     # Define la arquitectura del modelo
     model = models.resnet50(weights=None)  # Crea una instancia del modelo ResNet50
+    model = torch.quantization.quantize_dynamic(model, {torch.nn.Linear}, dtype=torch.qint8)
     num_ftrs = model.fc.in_features
     model.fc = torch.nn.Linear(num_ftrs, 3)  # Ajusta el número de clases si es necesario
 
     # Carga los pesos en el modelo
-    model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
+    model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu'), weights_only=True))
+
 
     model.eval()  # Cambia el modelo a modo de evaluación
     return model
