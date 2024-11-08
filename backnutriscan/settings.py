@@ -11,6 +11,13 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
+
+from dotenv import load_dotenv
+
+# Cargar el archivo .env
+load_dotenv()
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,10 +27,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-c+!mr0ldrj-==3-i6v0xe-v7r+r=+4id#j-f4o^^x95ur9st-w'
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG")
 
 #ALLOWED_HOSTS = ['*','192.168.202.252','127.0.0.1']
 ALLOWED_HOSTS = ['*']
@@ -40,8 +47,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
+    'rest_framework.authtoken',  # Agrega esta línea
     'rest_framework_simplejwt',
-    'nutriscan',
+    'nutriscan.apps.NutriscanConfig',
 ]
 
 REST_FRAMEWORK = {
@@ -88,11 +96,11 @@ WSGI_APPLICATION = 'backnutriscan.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'nutriscandatabase',  # Nombre de tu base de datos
-        'USER': 'postgres',  # Usuario de PostgreSQL
-        'PASSWORD': '1234',  # Contraseña del usuario
-        'HOST': 'localhost',  # Dirección del servidor (para desarrollo local es 'localhost')
-        'PORT': '5432',  # Puerto de PostgreSQL (por defecto es 5432)
+        'NAME': os.getenv("DB_NAME"),
+        'USER': os.getenv("DB_USER"),
+        'PASSWORD': os.getenv("DB_PASSWORD"),
+        'HOST': os.getenv("DB_HOST", "localhost"),  # Puedes agregar un valor por defecto
+        'PORT': os.getenv("DB_PORT", "5432"),       # También puedes agregar un puerto por defecto
     }
 }
 
@@ -140,7 +148,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 #Cors auterization
 CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:50450",
-    "http://127.0.0.1:9101",
-    "http://192.168.202.252:8000"
+    
 ]
+
+
+
+# Configuración de AWS (cambiar a AIM)
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')  # Reemplaza con tu Access Key de AWS
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')  # Reemplaza con tu Secret Key de AWS
+AWS_REGION = os.getenv('AWS_REGION')  # Reemplaza con la región de tu bucket
+AWS_S3_BUCKET_NAME = os.getenv('AWS_S3_BUCKET_NAME')  # Reemplaza con el nombre de tu bucket
+AWS_SES_SOURCE_EMAIL = os.getenv('AWS_SES_SOURCE_EMAIL')  # El correo verificado en SES para enviar
+
