@@ -1,6 +1,6 @@
 # views.py
 
-from rest_framework import generics
+""" from rest_framework import generics
 from ...models import MalnutritionDetection
 from nutriscan.serializers import MalnutritionDetectionSerializer
 from rest_framework.permissions import IsAuthenticated
@@ -12,4 +12,4 @@ class MalnutritionDetectionCreateView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]  # Requiere que el usuario esté autenticado
 
     def perform_create(self, serializer):
-        serializer.save()
+        serializer.save() """

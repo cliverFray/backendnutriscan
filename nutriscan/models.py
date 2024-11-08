@@ -1,155 +1,105 @@
+from django.contrib.auth.models import User
 from django.db import models
+import uuid
+from django.db import transaction
 
-# Create your models here.
-
-#Programas de ayuda
-class AidPrograms(models.Model):
-    programId = models.AutoField(primary_key=True)
-    programName = models.CharField(max_length=255)
-    programDescription = models.TextField()
-    programType = models.CharField(max_length=50)
-    programContact = models.CharField(max_length=255)
-
-    def __str__(self):
-        return self.programName
-
-#Articulos y tips
-class ArticlesAndTips(models.Model):
-    articleTipId = models.AutoField(primary_key=True)
-    articleTipTitle = models.CharField(max_length=255)
-    articleTipContent = models.TextField()
-    articleTipType = models.CharField(max_length=50)
-    articleTipPublicationDate = models.DateField()
+class AditionalInfoUser(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)  # Relación con el modelo User predeterminado
+    userDNI = models.CharField(max_length=8, unique=True)
+    userPhone = models.CharField(max_length=9, unique=True)
+    userPlace = models.CharField(max_length=50)
+    # otros campos adicionales específicos del Cuidador
 
     def __str__(self):
-        return self.articleTipTitle
+        return f"{self.user.first_name} {self.user.last_name}"
 
-#Niño
+#child
+    
 class Child(models.Model):
     childId = models.AutoField(primary_key=True)
     childName = models.CharField(max_length=50)
     childLastName = models.CharField(max_length=50)
     childAgeMonth = models.IntegerField()
-    childGender = models.BooleanField()  # True for Male, False for Female
+    childGender = models.BooleanField()  # True para masculino, False para femenino
     childCurrentWeight = models.DecimalField(max_digits=5, decimal_places=2)
     childCurrentHeight = models.DecimalField(max_digits=5, decimal_places=2)
-    userId = models.ForeignKey('User', on_delete=models.CASCADE)
+    childBirthDate = models.DateField()  # Fecha de nacimiento del niño
+    user = models.ForeignKey(User, related_name="children", on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.childName
+        return f"{self.childName} {self.childLastName}"
+    
+#Detecciones
 
-#Tips diarios
-class DailyTips(models.Model):
-    dailyTipId = models.AutoField(primary_key=True)
-    dailyTipContent = models.TextField()
-    dailyTipDate = models.DateField()
-    dailyTipCategory = models.CharField(max_length=50)
-
-    def __str__(self):
-        return self.dailyTipCategory
-
-#Reportes o graficos
-class GrowthReports(models.Model):
-    reportId = models.AutoField(primary_key=True)
-    reportDate = models.DateField()
-    reportDescription = models.TextField()
-    reportUrl = models.CharField(max_length=255)
-    childId = models.ForeignKey(Child, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f"Growth Report {self.reportDate}"
-
-#Centros de salud
-class HealthCenters(models.Model):
-    healthCenterId = models.AutoField(primary_key=True)
-    healthCenterName = models.CharField(max_length=255)
-    healthCenterAddress = models.CharField(max_length=255)
-    healthCenterEmail = models.EmailField(max_length=255)
-    healthCenterPhone = models.CharField(max_length=20)
-    healthCenterContactPerson = models.CharField(max_length=255)
-
-    def __str__(self):
-        return self.healthCenterName
-
-#Deteccion de desnutricion
 class MalnutritionDetection(models.Model):
     detectionId = models.AutoField(primary_key=True)
-    detectionDate = models.DateField()
-    detectionResult = models.CharField(max_length=50)
-    detectionImageUrl = models.CharField(max_length=255)
-    childId = models.ForeignKey(Child, on_delete=models.CASCADE)
-    healthCenterId = models.ForeignKey(HealthCenters, on_delete=models.CASCADE)
+    detectionDate = models.DateField(auto_now_add=True)  # Fecha de detección, se asigna automáticamente
+    detectionResult = models.CharField(max_length=50)  # Resultado de la detección
+    detectionImageUrl = models.URLField()  # URL de la imagen en S3
+    child = models.ForeignKey(Child, on_delete=models.CASCADE, related_name="detections")
 
     def __str__(self):
-        return f"Detection {self.detectionDate} for {self.childId.childName}"
+        return f"Detection {self.detectionId} for child {self.child.childName}"
+
+#Reset password code
+class PasswordResetCode(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    code = models.CharField(max_length=6)  # Código de 6 dígitos
+    created_at = models.DateTimeField(auto_now_add=True)
+    expiration = models.DateTimeField()  # Tiempo de expiración
+
+    def __str__(self):
+        return f"Password reset code for {self.user.username}"
 
 #Notificaciones
-class Notifications(models.Model):
-    notificationId = models.AutoField(primary_key=True)
+class Notification(models.Model):
     notificationTitle = models.CharField(max_length=255)
     notificationDescription = models.TextField()
-    notificationDate = models.DateField()
-    userId = models.ForeignKey('User', on_delete=models.CASCADE)
+    notificationDate = models.DateField(auto_now_add=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notifications")
 
     def __str__(self):
-        return self.notificationTitle
+        return f"{self.notificationTitle} for {self.user.username}"
+
+
+#Verification code
+class VerificationCode(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    code = models.CharField(max_length=6)
+    expiration = models.DateTimeField()  # Tiempo de expiración del código
+
+    def __str__(self):
+        return f"Verification code for {self.user.username}"
+
+
+class RecommendationTemplate(models.Model):
+    CATEGORY_CHOICES = [
+        ('Desnutricion severa', 'Desnutricion severa'),
+        ('Normal', 'Normal'),
+        ('Riesgo desnutricion', 'Riesgo desnutricion'),
+    ]
     
-#Recomendaciones nutricionales
-class NutritionalRecommendations(models.Model):
-    recommendationId = models.AutoField(primary_key=True)
-    recommendationTitle = models.CharField(max_length=255)
-    recommendationDescription = models.TextField()
-    recommendationType = models.CharField(max_length=50)
-    childId = models.ForeignKey(Child, on_delete=models.CASCADE)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    message = models.TextField()  # Mensaje de la recomendación
 
     def __str__(self):
-        return self.recommendationTitle
+        return f"Recommendation for {self.category}: {self.message[:30]}"  # Muestra los primeros 30 caracteres
 
-#Tips para embarazadas
-class PregnancyTips(models.Model):
-    pregnancyTipId = models.AutoField(primary_key=True)
-    pregnancyTipContent = models.TextField()
-    pregnancyTipStage = models.CharField(max_length=50)
-    pregnancyTipDate = models.DateField()
-    pregnancyTipCategory = models.CharField(max_length=50)
+
+class ImmediateRecommendation(models.Model):
+    inmediateRecomId = models.AutoField(primary_key=True)
+    detection = models.OneToOneField(MalnutritionDetection, on_delete=models.CASCADE, related_name="immediate_recommendation")
+    inmediateRecomMessage = models.TextField()  # Mensaje de la recomendación inmediata
 
     def __str__(self):
-        return self.pregnancyTipCategory
+        return f"Immediate recommendation for detection {self.detection.detectionId}"
 
-#Recetas
-class Recipes(models.Model):
-    recipeId = models.AutoField(primary_key=True)
-    recipeName = models.CharField(max_length=255)
-    recipeDescription = models.CharField(max_length=255)
-    recipeIngredients = models.CharField(max_length=255)
-    recipeInstructions = models.CharField(max_length=255)
-    recipeEstimatedPrice = models.DecimalField(max_digits=10, decimal_places=2)
+
+class GrowthHistory(models.Model):
+    child = models.ForeignKey(Child, on_delete=models.CASCADE, related_name="growth_history")
+    date_recorded = models.DateField(auto_now_add=True)  # Fecha de registro
+    weight = models.DecimalField(max_digits=5, decimal_places=2)  # Peso en kg
+    height = models.DecimalField(max_digits=5, decimal_places=2)  # Altura en cm
 
     def __str__(self):
-        return self.recipeName
-
-#Recomendacions por recetas
-class RecommendationRecipes(models.Model):
-    recipeId = models.ForeignKey(Recipes, on_delete=models.CASCADE)
-    nutrrecommendationId = models.ForeignKey(NutritionalRecommendations, on_delete=models.CASCADE)
-
-    class Meta:
-        unique_together = ('recipeId', 'nutrrecommendationId')
-
-    def __str__(self):
-        return f"Recipe {self.recipeId.recipeName} linked to Recommendation {self.nutrrecommendationId.recommendationTitle}"
-    
-#Usuario
-class User(models.Model):
-    userId = models.AutoField(primary_key=True)
-    userFirstName = models.CharField(max_length=50)
-    userLastName = models.CharField(max_length=50)
-    userPassword = models.CharField(max_length=255)
-    userDNI = models.CharField(max_length=8)
-    userPhone = models.CharField(max_length=9)
-    userEmail = models.EmailField(max_length=255)
-    userRegistrationDate = models.DateField()
-    UserPlace = models.CharField(max_length=50)
-
-    def __str__(self):
-        return f"{self.userFirstName} {self.userLastName}"
+        return f"Growth record for {self.child.childName} on {self.date_recorded}"

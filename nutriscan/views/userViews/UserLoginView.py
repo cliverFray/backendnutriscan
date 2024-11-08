@@ -1,16 +1,21 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from nutriscan.serializers import UserLoginSerializer
-import jwt
-from django.conf import settings
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import RefreshToken
 
-class LoginView(APIView):
+class UserLoginView(APIView):
     def post(self, request):
-        serializer = UserLoginSerializer(data=request.data)
-        if serializer.is_valid():
-            user_data = serializer.validated_data
-            # Crear un token JWT
-            token = jwt.encode(user_data, settings.SECRET_KEY, algorithm='HS256')
-            return Response({"token": token}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        username = request.data.get("userPhone")
+        password = request.data.get("password")
+        user = authenticate(username=username, password=password)
+        
+        if user:
+            # Genera tokens de acceso y refresco con SimpleJWT
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                "refresh": str(refresh),
+                "access": str(refresh.access_token)
+            }, status=status.HTTP_200_OK)
+        
+        return Response({"message": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
