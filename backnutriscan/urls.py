@@ -26,6 +26,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
+from django.conf import settings # new
+from  django.conf.urls.static import static #new
+
 class Protegida(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -40,3 +43,7 @@ urlpatterns = [
     path('protegida/', Protegida.as_view(), name='protegida'),
     path('nutriscan/', include('nutriscan.urls')),  # Incluye las URLs de tu app
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root = settings.STATIC_URL)
