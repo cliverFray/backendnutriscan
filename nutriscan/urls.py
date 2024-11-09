@@ -17,6 +17,8 @@ from .views.userViews.identityVerification.VerifyCodeView import VerifyCodeView
 from .views.userViews.identityVerification.ResendVerificationCodeView import ResendVerificationCodeView
 from .views.userViews.identityVerification.VerifyVerificationCodeView import VerifyVerificationCodeView
 
+from .views.userViews.identityVerification.GenerateAndSendVerificationCodeView import GenerateAndSendVerificationCodeView
+
 #child
 from .views.child.ListChildrenView import ListChildrenView
 from .views.child.RegisterChildView import RegisterChildView
@@ -50,6 +52,7 @@ urlpatterns = [
     path('account/delete/', DeleteAccountView.as_view(), name='delete_account'),#falata probar
     path('user/update/', UpdateUserView.as_view(), name='update-user'),
     path('verification/send-code/', SendVerificationCodeView.as_view(), name='send_verification_code'),
+    path('verification/generate-send-code/', GenerateAndSendVerificationCodeView.as_view(), name='generate_send_verification_code'),
     path('verification/verify-code/', VerifyCodeView.as_view(), name='verify_code'),
     path('verification/resend-code/', ResendVerificationCodeView.as_view(), name='resend_verification_code'),
     path('verification/verify-code/', VerifyVerificationCodeView.as_view(), name='verify_verification_code'),
