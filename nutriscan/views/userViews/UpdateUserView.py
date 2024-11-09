@@ -25,10 +25,7 @@ class UpdateUserView(APIView):
             with transaction.atomic():  # Garantizar que ambas operaciones se realicen en conjunto
                 user_serializer.save()
                 additional_info_serializer.save()
-            return Response({
-                "user": user_serializer.data,
-                "additional_info": additional_info_serializer.data
-            }, status=status.HTTP_200_OK)
+            return Response({"message": "Usuario actualizado exitosamente."}, status=status.HTTP_200_OK)
         
         # Si alguna de las serializaciones no es válida, devolver los errores
         errors = {

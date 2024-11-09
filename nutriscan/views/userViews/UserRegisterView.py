@@ -43,10 +43,7 @@ class UserRegisterView(APIView):
                 if aditional_info_serializer.is_valid():
                     # Guarda la información adicional y asocia la instancia de `user`
                     aditional_info_serializer.save(user=user)
-                    return Response({
-                        "user": user_serializer.data,
-                        "aditional_info": aditional_info_serializer.data
-                    }, status=status.HTTP_201_CREATED)
+                    return Response({"message": "Usuario registrado exitosamente."}, status=status.HTTP_201_CREATED)
                 else:
                     user.delete()  # Elimina el usuario si falla la creación de información adicional
                     return Response(aditional_info_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
