@@ -9,6 +9,7 @@ from django.utils import timezone
 from ....models import VerificationCode, AditionalInfoUser
 
 class ResendVerificationCodeView(APIView):
+    http_method_names = ['post']  # Solo permite POST
     def post(self, request):
         phone_number = request.data.get('phone')
         

@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 
 class RegisterChildView(APIView):
     permission_classes = [IsAuthenticated]
-
+    http_method_names = ['post']  # Solo permite POST
     def post(self, request):
         child_data = request.data.copy()  # Crea una copia de los datos del niño
         child_data['user'] = request.user  # Asocia el objeto de usuario autenticado directamente

@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404
 
 class GrowthChartDataView(APIView):
     permission_classes = [IsAuthenticated]
-
+    http_method_names = ['get']  # Solo permite GET
     def get(self, request, child_id):
         user = request.user
         # Verificar que el niño pertenece al usuario autenticado

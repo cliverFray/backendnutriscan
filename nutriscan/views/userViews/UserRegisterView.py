@@ -10,6 +10,7 @@ from ...serializers.userSerializers.UserRegisterSerializer import UserRegisterSe
 from django.db import IntegrityError
 
 class UserRegisterView(APIView):
+    http_method_names = ['post']  # Solo permite POST
     def post(self, request):
         user_data = request.data.get('user')
         aditional_info_data = {

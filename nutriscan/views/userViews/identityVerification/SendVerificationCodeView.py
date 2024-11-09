@@ -10,6 +10,7 @@ from ....models import VerificationCode, AditionalInfoUser
 from django.contrib.auth.models import User
 
 class SendVerificationCodeView(APIView):
+    http_method_names = ['post']  # Solo permite POST
     def post(self, request):
         # Obtener el número de teléfono del usuario
         phone_number = request.data.get('phone')

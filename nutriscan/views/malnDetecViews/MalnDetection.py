@@ -13,6 +13,7 @@ from cnnmodel.modelHandler import predict_image_from_url
 
 class UploadDetectionImageView(APIView):
     permission_classes = [IsAuthenticated]
+    http_method_names = ['post']  # Solo permite POST
 
     def post(self, request, child_id):
         user = request.user

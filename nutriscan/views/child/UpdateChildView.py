@@ -7,7 +7,8 @@ from rest_framework.permissions import IsAuthenticated
 
 class UpdateChildView(APIView):
     permission_classes = [IsAuthenticated]
-
+    http_method_names = ['put']  # Solo permite el método PUT
+    
     def put(self, request, pk):
         try:
             # Obtiene el objeto del niño, asegurándose de que pertenezca al usuario autenticado

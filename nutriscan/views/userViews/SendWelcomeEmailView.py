@@ -4,8 +4,11 @@ from django.contrib.auth.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 
 class SendWelcomeEmailView(APIView):
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['post']  # Solo permite POST
     def post(self, request):
         # Obtener el ID del usuario o cualquier dato que identifique al usuario autenticado
         user_id = request.data.get("user_id")
