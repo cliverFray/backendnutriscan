@@ -29,14 +29,14 @@ from rest_framework.permissions import IsAuthenticated
 from django.conf import settings # new
 from  django.conf.urls.static import static #new
 
-class Protegida(APIView):
-    permission_classes = [IsAuthenticated]
-    
-    def get(self, request):
-        return Response({"content": "Esta vista está protegida"})
+from django.http import HttpResponse
+
+def home(request):
+    return HttpResponse("Bienvenido a la aplicación Nutriscan")
 
 
 urlpatterns = [
+    path('', home, name='home'),  # Define una vista para la raíz
     path('nutriscan/', include('nutriscan.urls')),  # Incluye las URLs de tu app
 ]
 
