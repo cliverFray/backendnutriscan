@@ -9,6 +9,7 @@ from rest_framework import status
 from ...models import AditionalInfoUser, PasswordResetCode
 
 class ResendPasswordResetCodeView(APIView):
+    http_method_names = ['post']  # Solo permite POST
     def post(self, request):
         phone = request.data.get("phone")
 

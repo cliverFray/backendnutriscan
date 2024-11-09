@@ -7,7 +7,7 @@ from ...serializers.childSerializers.childSerializer import ChildSerializer
 
 class ListChildrenView(APIView):
     permission_classes = [IsAuthenticated]
-
+    http_method_names = ['get']  # Solo permite GET
     def get(self, request):
         # Filtra los niños asociados al usuario autenticado
         children = Child.objects.filter(user=request.user)

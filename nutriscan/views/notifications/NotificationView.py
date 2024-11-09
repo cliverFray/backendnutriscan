@@ -8,6 +8,7 @@ from django.utils import timezone
 
 class NotificationView(APIView):
     permission_classes = [IsAuthenticated]
+    http_method_names = ['get', 'post']  # Solo permite GET y POST
 
     def get(self, request):
         """Listar notificaciones del usuario autenticado"""

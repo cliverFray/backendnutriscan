@@ -8,6 +8,7 @@ from ....views.userViews.SendWelcomeEmailView import SendWelcomeEmailView
 from rest_framework.test import APIRequestFactory  # Import necesario para crear la solicitud
 
 class VerifyCodeView(APIView):
+    http_method_names = ['post']  # Solo permite POST
     def post(self, request):
         phone = request.data.get("phone")
         code = request.data.get("code")

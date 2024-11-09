@@ -8,6 +8,7 @@ from django.db import transaction
 
 class DeleteAccountView(APIView):
     permission_classes = [IsAuthenticated]
+    http_method_names = ['delete']  # Solo permite DELETE
 
     def delete(self, request):
         user = request.user

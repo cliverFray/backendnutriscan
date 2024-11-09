@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 
 class UserLoginView(APIView):
+    http_method_names = ['post']  # Solo permite POST
     def post(self, request):
         username = request.data.get("userPhone")
         password = request.data.get("password")

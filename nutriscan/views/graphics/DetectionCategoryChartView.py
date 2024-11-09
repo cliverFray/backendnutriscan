@@ -11,6 +11,7 @@ from ...models import Child, MalnutritionDetection
 
 class DetectionCategoryChartView(APIView):
     permission_classes = [IsAuthenticated]
+    http_method_names = ['get']  # Solo permite GET
 
     def get(self, request, child_id):
         user = request.user
