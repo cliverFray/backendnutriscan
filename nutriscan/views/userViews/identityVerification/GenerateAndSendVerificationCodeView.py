@@ -37,7 +37,7 @@ class GenerateAndSendVerificationCodeView(APIView):
         try:
             sns_client.publish(
                 PhoneNumber=f"+51{phone_number}",
-                Message=f"Tu código de verificación es {verification_code}"
+                Message=f"Tu código de verificación de NutriScan es {verification_code}. Expira en 10 minutos"
             )
         except Exception as e:
             return Response({
