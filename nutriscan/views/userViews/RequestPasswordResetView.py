@@ -39,7 +39,7 @@ class RequestPasswordResetView(APIView):
             region_name=settings.AWS_REGION
         )
 
-        message = f"Su código de restablecimiento de contraseña es: {reset_code}. Expira en 10 minutos."
+        message = f"Su código de restablecimiento de contraseña de NutriScan es: {reset_code}. Expira en 10 minutos."
         try:
             sns_client.publish(
                 PhoneNumber=f"+51{phone}",  # Cambia el prefijo según el país
