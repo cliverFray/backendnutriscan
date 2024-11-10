@@ -64,12 +64,13 @@ class Notification(models.Model):
 
 #Verification code
 class VerificationCode(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    phone = models.CharField(max_length=15)  # Cambiado de user a phone
     code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
     expiration = models.DateTimeField()  # Tiempo de expiración del código
 
     def __str__(self):
-        return f"Verification code for {self.user.username}"
+        return f"Verification code for {self.phone}"
 
 
 class RecommendationTemplate(models.Model):

@@ -7,7 +7,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from ....models import VerificationCode
-
 from django.utils.translation import gettext_lazy as _
 
 class GenerateAndSendVerificationCodeView(APIView):
@@ -47,9 +46,11 @@ class GenerateAndSendVerificationCodeView(APIView):
 
         # Guardar el código en la base de datos con expiración de 10 minutos
         expiration_time = timezone.now() + timedelta(minutes=10)
-        VerificationCode.objects.update_or_create(
+        VerificationCode.objects.create(
             phone=phone_number,
-            defaults={'code': verification_code, 'expiration': expiration_time}
+            code=verification_code,
+            expiration=expiration_time,
+            created_at=timezone.now()
         )
 
         return Response({
