@@ -32,7 +32,7 @@ from  django.conf.urls.static import static #new
 from django.http import HttpResponse
 
 def home(request):
-    return HttpResponse("Bienvenido a la aplicación Nutriscan")
+    return HttpResponse("Welcome")
 
 
 urlpatterns = [

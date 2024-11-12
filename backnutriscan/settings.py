@@ -15,6 +15,8 @@ import os
 
 from dotenv import load_dotenv
 
+from datetime import timedelta
+
 # Cargar el archivo .env
 load_dotenv()
 
@@ -32,7 +34,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG")
 
-#ALLOWED_HOSTS = ['*','192.168.202.252','127.0.0.1']
+
 ALLOWED_HOSTS = ['*']
 
 
@@ -101,11 +103,17 @@ DATABASES = {
         'NAME': os.getenv("DB_NAME"),
         'USER': os.getenv("DB_USER"),
         'PASSWORD': os.getenv("DB_PASSWORD"),
-        'HOST': os.getenv("DB_HOST", "localhost"),  # Puedes agregar un valor por defecto
-        'PORT': os.getenv("DB_PORT", "5432"),       # También puedes agregar un puerto por defecto
+        'HOST': os.getenv("DB_HOST", "localhost"),  
+        'PORT': os.getenv("DB_PORT", "5432"),
     }
 }
 
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5), 
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
