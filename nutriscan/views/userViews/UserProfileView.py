@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import User
-from ...serializers.userSerializers import AditionalInfoUserSerializer
+from ...serializers.userSerializers.UserRegisterSerializer import UserRegisterSerializer, AditionalInfoUserSerializer
 from ...models import AditionalInfoUser
 
 class UserProfileView(APIView):
