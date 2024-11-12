@@ -21,8 +21,8 @@ class Child(models.Model):
     childLastName = models.CharField(max_length=50)
     childAgeMonth = models.IntegerField()
     childGender = models.BooleanField()  # True para masculino, False para femenino
-    childCurrentWeight = models.DecimalField(max_digits=5, decimal_places=2)
-    childCurrentHeight = models.DecimalField(max_digits=5, decimal_places=2)
+    childCurrentWeight = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)  # Permitir nulos
+    childCurrentHeight = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)  # Permitir nulos
     childBirthDate = models.DateField()  # Fecha de nacimiento del niño
     user = models.ForeignKey(User, related_name="children", on_delete=models.CASCADE)
 

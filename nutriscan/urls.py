@@ -1,5 +1,7 @@
 from django.urls import path
+from rest_framework_simplejwt.views import TokenRefreshView
 
+from cnnmodel.validate_image import validate_image
 #user
 from .views.userViews.UserRegisterView import UserRegisterView
 from .views.userViews.UserLoginView import UserLoginView
@@ -17,13 +19,18 @@ from .views.userViews.identityVerification.ResendVerificationCodeView import Res
 
 from .views.userViews.identityVerification.GenerateAndSendVerificationCodeView import GenerateAndSendVerificationCodeView
 
+from .views.userViews.UserProfileView import UserProfileView
+
 #child
 from .views.child.ListChildrenView import ListChildrenView
 from .views.child.RegisterChildView import RegisterChildView
 from .views.child.UpdateChildView import UpdateChildView
+from .views.child.ChildrenNamesView import ChildrenNamesView
+from .views.child.GetChildById import RetrieveChildView
 
 #malnutrition detection
 from .views.malnDetecViews.MalnDetection import UploadDetectionImageView
+from .views.malnDetecViews.DetectionHistoryView import DetectionHistoryView
 
 #Notifications
 from .views.notifications.NotificationView import NotificationView
@@ -41,6 +48,8 @@ urlpatterns = [
     path('child/register/', RegisterChildView.as_view(), name='register_child'),
     path('child/update/<int:pk>/', UpdateChildView.as_view(), name='update_child'),
     path('children/', ListChildrenView.as_view(), name='list_children'),
+    path('children/<int:child_id>/', RetrieveChildView.as_view(), name='retrieve_child'),
+    path('children/names/', ChildrenNamesView.as_view(), name='children-names'),
     path('detections/upload/<int:child_id>/', UploadDetectionImageView.as_view(), name='upload_detection_image'),
     path('password-reset/request/', RequestPasswordResetView.as_view(), name='request_password_reset'),
     path('password-reset/verify/', VerifyPasswordResetCodeView.as_view(), name='verify_password_reset_code'),
@@ -56,4 +65,8 @@ urlpatterns = [
     path('inmediate-recomedations/<int:child_id>/', GenerateRecommendationView.as_view(), name='inmediate_recomendation'),#falta configurar el SES y probar
     path('growth-chart/<int:child_id>/', GrowthChartDataView.as_view(), name='growth_chart_data'),
     path('detections/chart/<int:child_id>/', DetectionCategoryChartView.as_view(), name='detection_category_chart'),
+    path('detections/history/', DetectionHistoryView.as_view(), name='detection_history'),
+    path('validate-image/', validate_image, name='validate_image'),
+    path('user/profile/', UserProfileView.as_view(), name='user_profile'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
