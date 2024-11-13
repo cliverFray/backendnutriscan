@@ -51,6 +51,7 @@ def predict_image(image):
     try:
         
         # Procesar la imagen
+        image = Image.open(image).convert("RGB")
         image = test_transform(image).unsqueeze(0)
         image = image.to(device)
 
