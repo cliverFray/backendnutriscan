@@ -6,6 +6,7 @@ from rest_framework import status
 from ...models import Child, MalnutritionDetection, GrowthHistory
 from rest_framework.permissions import IsAuthenticated
 from cnnmodel.modelHandler import predict_image_from_url
+from cnnmodel.modelHandler import predict_image
 from ...utils.recommendationGenerator import RecommendationGenerator
 
 class UploadDetectionImageView(APIView):
@@ -43,7 +44,7 @@ class UploadDetectionImageView(APIView):
             return Response({"error": f"Error al subir la imagen: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # Ejecuta el modelo de detección con la URL de la imagen
-        detection_result = predict_image_from_url(image_url)
+        detection_result = predict_image(image)
 
         if detection_result is None:
             return Response({"error": "No se pudo procesar la imagen con el modelo."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

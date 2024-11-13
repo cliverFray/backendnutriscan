@@ -46,3 +46,22 @@ def predict_image_from_url(image_url):
     except Exception as e:
         print(f"Error al predecir la imagen: {e}")
         return None
+
+def predict_image(image):
+    try:
+        
+        # Procesar la imagen
+        image = test_transform(image).unsqueeze(0)
+        image = image.to(device)
+
+        # Realizar la predicción
+        with torch.no_grad():
+            outputs = model(image)
+            _, preds = torch.max(outputs, 1)
+
+        # Mapeo de las clases
+        class_names = ['N_DESNUTRIDO', 'N_NORMAL', 'N_RIESGO_DESNUTRIDO']
+        return class_names[preds.item()]
+    except Exception as e:
+        print(f"Error al predecir la imagen: {e}")
+        return None
