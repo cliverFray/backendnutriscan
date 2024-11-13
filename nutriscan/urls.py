@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from cnnmodel.validate_image import validate_image
+from cnnmodel.validate_image import ValidateImageView
 #user
 from .views.userViews.UserRegisterView import UserRegisterView
 from .views.userViews.UserLoginView import UserLoginView
@@ -66,7 +66,7 @@ urlpatterns = [
     path('growth-chart/<int:child_id>/', GrowthChartDataView.as_view(), name='growth_chart_data'),
     path('detections/chart/<int:child_id>/', DetectionCategoryChartView.as_view(), name='detection_category_chart'),
     path('detections/history/', DetectionHistoryView.as_view(), name='detection_history'),
-    path('validate-image/', validate_image, name='validate_image'),
+    path('validate-image/', ValidateImageView.as_view(), name='validate_image'),
     path('user/profile/', UserProfileView.as_view(), name='user_profile'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
