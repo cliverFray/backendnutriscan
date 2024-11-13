@@ -13,3 +13,6 @@ __pycache__/
 *.log
 
 .env
+settings.py
+backnutriscan/settings.py
+parameter_loader.py
