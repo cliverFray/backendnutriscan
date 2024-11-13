@@ -26,6 +26,20 @@ class UploadDetectionImageView(APIView):
         image = request.FILES.get('image')
         if not image:
             return Response({"error": "El archivo de imagen es requerido"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        detection_result = predict_image(image)
+
+        if detection_result is None:
+            return Response({"error": "No se pudo procesar la imagen con el modelo."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        
+        result_map = {
+            'N_DESNUTRIDO': 'Con desnutrición',
+            'N_NORMAL': 'Normal',
+            'N_RIESGO_DESNUTRIDO': 'Riesgo en desnutricion'
+        }
+        readable_result = result_map.get(detection_result, "desconocido")
+        
 
         s3_client = boto3.client(
             's3',  
@@ -44,18 +58,9 @@ class UploadDetectionImageView(APIView):
             return Response({"error": f"Error al subir la imagen: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # Ejecuta el modelo de detección con la URL de la imagen
-        detection_result = predict_image(image)
-
-        if detection_result is None:
-            return Response({"error": "No se pudo procesar la imagen con el modelo."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
 
         
-        result_map = {
-            'N_DESNUTRIDO': 'Con desnutrición',
-            'N_NORMAL': 'Normal',
-            'N_RIESGO_DESNUTRIDO': 'Riesgo en desnutricion'
-        }
-        readable_result = result_map.get(detection_result, "desconocido")
         # Guarda el resultado de la detección en la base de datos
 
         detection = MalnutritionDetection.objects.create(
