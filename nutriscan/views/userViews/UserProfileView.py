@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import User
 from ...serializers.userSerializers.UserRegisterSerializer import UserRegisterSerializer, AditionalInfoUserSerializer
+from ...serializers.userSerializers.UserProfileSerializer import UserProfileSerializer
 from ...models import AditionalInfoUser
 
 class UserProfileView(APIView):
@@ -13,10 +14,9 @@ class UserProfileView(APIView):
 
     def get(self, request):
         try:
-            # Obtén el usuario autenticado
             user = User.objects.get(id=request.user.id)
             aditional_info = AditionalInfoUser.objects.get(user=user)
-            serializer = AditionalInfoUserSerializer(aditional_info)
+            serializer = UserProfileSerializer(aditional_info)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except AditionalInfoUser.DoesNotExist:
             return Response(
