@@ -13,12 +13,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 
-from dotenv import load_dotenv
-
 from datetime import timedelta
-
-# Cargar el archivo .env
-load_dotenv()
+from ..parameter_loader import get_parameter
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -29,10 +25,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = get_parameter('/nutriscan/prod/SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG")
+DEBUG = get_parameter('/nutriscan/prod/DEBUG') == 'true'
 
 
 ALLOWED_HOSTS = ['*']
@@ -100,11 +96,11 @@ WSGI_APPLICATION = 'backnutriscan.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv("DB_NAME"),
-        'USER': os.getenv("DB_USER"),
-        'PASSWORD': os.getenv("DB_PASSWORD"),
-        'HOST': os.getenv("DB_HOST", "localhost"),  
-        'PORT': os.getenv("DB_PORT", "5432"),
+        'NAME': get_parameter('/nutriscan/prod/DB_NAME'),
+        'USER': get_parameter('/nutriscan/prod/DB_USER'),
+        'PASSWORD': get_parameter('/nutriscan/prod/DB_PASSWORD'),
+        'HOST': get_parameter('/nutriscan/prod/DB_HOST'),
+        'PORT': get_parameter('/nutriscan/prod/DB_PORT'),
     }
 }
 
@@ -163,10 +159,10 @@ CORS_ALLOWED_ORIGINS = [
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
-# Configuración de AWS (cambiar a AIM)
-AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')  # Reemplaza con tu Access Key de AWS
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')  # Reemplaza con tu Secret Key de AWS
-AWS_REGION = os.getenv('AWS_REGION')  # Reemplaza con la región de tu bucket
-AWS_S3_BUCKET_NAME = os.getenv('AWS_S3_BUCKET_NAME')  # Reemplaza con el nombre de tu bucket
-AWS_SES_SOURCE_EMAIL = os.getenv('AWS_SES_SOURCE_EMAIL')  # El correo verificado en SES para enviar
+# Configuración de AWS
+AWS_ACCESS_KEY_ID = get_parameter('/nutriscan/prod/AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = get_parameter('/nutriscan/prod/AWS_SECRET_ACCESS_KEY')
+AWS_REGION = get_parameter('/nutriscan/prod/AWS_REGION')
+AWS_S3_BUCKET_NAME = get_parameter('/nutriscan/prod/AWS_S3_BUCKET_NAME')
+AWS_SES_SOURCE_EMAIL = get_parameter('/nutriscan/prod/AWS_SES_SOURCE_EMAIL')
 
