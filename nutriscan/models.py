@@ -36,6 +36,7 @@ class MalnutritionDetection(models.Model):
     detectionDate = models.DateField(auto_now_add=True)  # Fecha de detección, se asigna automáticamente
     detectionResult = models.CharField(max_length=50)  # Resultado de la detección
     detectionImageUrl = models.URLField()  # URL de la imagen en S3
+    expirationDate = models.DateTimeField(null=True, blank=True)  # Fecha de expiración de la URL
     child = models.ForeignKey(Child, on_delete=models.CASCADE, related_name="detections")
 
     def __str__(self):
@@ -104,3 +105,14 @@ class GrowthHistory(models.Model):
 
     def __str__(self):
         return f"Growth record for {self.child.childName} on {self.date_recorded}"
+    
+class NutritionTip(models.Model):
+    title = models.CharField(max_length=100)  # Título breve del consejo
+    description = models.TextField()  # Descripción detallada del consejo
+    calories = models.IntegerField(null=True, blank=True)  # Calorías opcionales
+    portion_size = models.CharField(max_length=50, blank=True)  # Tamaño de la porción
+    image_url = models.URLField(max_length=255, blank=True)  # Enlace de imagen de S3
+    date_created = models.DateTimeField(auto_now_add=True)  # Fecha de creación
+
+    def __str__(self):
+        return self.title

@@ -8,10 +8,23 @@ from rest_framework.permissions import IsAuthenticated
 from cnnmodel.modelHandler import predict_image_from_url
 from cnnmodel.modelHandler import predict_image
 from ...utils.recommendationGenerator import RecommendationGenerator
+from datetime import datetime, timedelta
 
 class UploadDetectionImageView(APIView):
     permission_classes = [IsAuthenticated]
     http_method_names = ['post']  # Solo permite POST
+
+    def generate_presigned_url(self, s3_client, bucket_name, object_name, expiration=3600):
+        """Genera una URL firmada"""
+        try:
+            url = s3_client.generate_presigned_url(
+                'get_object',
+                Params={'Bucket': bucket_name, 'Key': object_name},
+                ExpiresIn=expiration
+            )
+            return url
+        except Exception as e:
+            return None
 
     def post(self, request, child_id):
         user = request.user
@@ -22,7 +35,7 @@ class UploadDetectionImageView(APIView):
         except Child.DoesNotExist:
             return Response({"error": "El niño no pertenece al usuario autenticado o no existe."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Sube la imagen a S3
+        
         image = request.FILES.get('image')
         if not image:
             return Response({"error": "El archivo de imagen es requerido"}, status=status.HTTP_400_BAD_REQUEST)
@@ -53,19 +66,22 @@ class UploadDetectionImageView(APIView):
 
         try:
             s3_client.upload_fileobj(image, s3_bucket_name, s3_file_name)
-            image_url = f"https://{s3_bucket_name}.s3.amazonaws.com/{s3_file_name}"
+            
         except Exception as e:
             return Response({"error": f"Error al subir la imagen: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        # Ejecuta el modelo de detección con la URL de la imagen
-        
+        # Genera el url firmada
+        image_url = self.generate_presigned_url(s3_client, s3_bucket_name, s3_file_name, expiration=3600)
 
+        if not image_url:
+            return Response({"error": "No se pudo generar la URL firmada para la imagen."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         # Guarda el resultado de la detección en la base de datos
 
         detection = MalnutritionDetection.objects.create(
             detectionImageUrl=image_url,
             detectionResult=readable_result,
+            expirationDate = datetime.now() + timedelta(hours=1),  # Establecer la nueva fecha de expiración
             child=child
         )
 

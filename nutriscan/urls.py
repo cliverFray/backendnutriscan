@@ -32,6 +32,7 @@ from .views.child.GetChildById import RetrieveChildView
 #malnutrition detection
 from .views.malnDetecViews.MalnDetection import UploadDetectionImageView
 from .views.malnDetecViews.DetectionHistoryView import DetectionHistoryView
+from .views.malnDetecViews.GenerateNewPresignedUrlView import GenerateNewPresignedUrlView
 
 #Notifications
 from .views.notifications.NotificationView import NotificationView
@@ -71,4 +72,5 @@ urlpatterns = [
     path('user/profile/', UserProfileView.as_view(), name='user_profile'),
     path('user/update-info/', UserProfileRetrieveView.as_view(), name='user-update-info'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('generate_presigned_url/<int:detection_id>/', GenerateNewPresignedUrlView.as_view(), name='generate_presigned_url'),
 ]
