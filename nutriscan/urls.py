@@ -9,9 +9,10 @@ from .views.userViews.RequestPasswordResetView import RequestPasswordResetView
 from .views.userViews.VerifyPasswordResetCodeView import VerifyPasswordResetCodeView
 from .views.userViews.ResetPasswordView import ResetPasswordView
 from .views.userViews.DeleteAccountView import DeleteAccountView
-from .views.userViews.UpdateUserView import UpdateUserView
+from .views.userViews.UserProfileUpdateView import UserProfileUpdateView
 from .views.userViews.ResendPasswordResetCodeView import ResendPasswordResetCodeView
 from .views.userViews.SendWelcomeEmailView import SendWelcomeEmailView
+from .views.userViews.UserProfileRetrieveView import UserProfileRetrieveView
 
 
 from .views.userViews.identityVerification.VerifyCodeView import VerifyCodeView
@@ -57,7 +58,7 @@ urlpatterns = [
     path('password-reset/resend/', ResendPasswordResetCodeView.as_view(), name='resend_password_reset_code'),
     path('notifications/', NotificationView.as_view(), name='notifications'),#falta configurar en EC2 se configura y se prueba
     path('account/delete/', DeleteAccountView.as_view(), name='delete_account'),#falata probar
-    path('user/update/', UpdateUserView.as_view(), name='update-user'),
+    path('user/update/', UserProfileUpdateView.as_view(), name='update-user'),
     path('verification/generate-send-code/', GenerateAndSendVerificationCodeView.as_view(), name='generate_send_verification_code'),
     path('verification/verify-code/', VerifyCodeView.as_view(), name='verify_code'),
     path('verification/resend-code/', ResendVerificationCodeView.as_view(), name='resend_verification_code'),
@@ -68,5 +69,6 @@ urlpatterns = [
     path('detections/history/', DetectionHistoryView.as_view(), name='detection_history'),
     path('validate-image/', ValidateImageView.as_view(), name='validate_image'),
     path('user/profile/', UserProfileView.as_view(), name='user_profile'),
+    path('user/update-info/', UserProfileRetrieveView.as_view(), name='user-update-info'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
