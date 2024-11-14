@@ -20,6 +20,7 @@ class DetectionHistoryView(APIView):
                 "detectionDate": detection.detectionDate,
                 "detectionResult": detection.detectionResult,
                 "detectionImageUrl": detection.detectionImageUrl,
+                "childId": detection.child.childId,
                 "childName": detection.child.childName
             }
             for detection in detections
