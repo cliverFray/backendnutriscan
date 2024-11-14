@@ -21,8 +21,7 @@ class UserProfileRetrieveView(APIView):
 
             # Combina ambos serializadores en la respuesta
             response_data = {
-                "user": user_serializer.data,
-                "aditional_info": aditional_info_serializer.data
+                "user": aditional_info_serializer.data
             }
             return Response(response_data, status=status.HTTP_200_OK)
 
