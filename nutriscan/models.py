@@ -116,3 +116,12 @@ class NutritionTip(models.Model):
 
     def __str__(self):
         return self.title
+
+class NutritionalTerm(models.Model):
+    name = models.CharField(max_length=100)  # Nombre del término nutricional
+    description = models.TextField()  # Descripción del término
+    examples = models.TextField()  # Ejemplos de alimentos
+    image_url = models.URLField(max_length=255, blank=True)  # URL de imagen para representación visual
+
+    def __str__(self):
+        return self.name
