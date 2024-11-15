@@ -70,7 +70,7 @@ class UploadDetectionImageView(APIView):
         s3_file_name = f"{child.childId}/detections/{unique_id}.{file_extension}"
 
         try:
-            s3_client.upload_fileobj(image, s3_bucket_name, s3_file_name)
+            s3_client.upload_fileobj(image.file, s3_bucket_name, s3_file_name)
             
         except Exception as e:
             return Response({"error": f"Error al subir la imagen: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
