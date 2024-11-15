@@ -40,6 +40,12 @@ from .views.notifications.NotificationView import NotificationView
 #inmediate recomendations
 from .views.inmediateRecomendations.GenerateRecommendationView import GenerateRecommendationView
 
+#nutritionTips
+from .views.nutritionTip.NutritionTipListView import NutritionTipListView
+
+#nutritionalTerms
+from .views.nutritionalTerm.NutritionalTermListView import NutritionalTermListView
+
 #Graphics
 from .views.graphics.GrowthChartDataView import GrowthChartDataView
 from .views.graphics.DetectionCategoryChartView import DetectionCategoryChartView
@@ -73,4 +79,6 @@ urlpatterns = [
     path('user/update-info/', UserProfileRetrieveView.as_view(), name='user-update-info'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('generate_presigned_url/<int:detection_id>/', GenerateNewPresignedUrlView.as_view(), name='generate_presigned_url'),
+    path('nutrition-tips/', NutritionTipListView.as_view(), name='nutrition-tip-list'),
+    path('nutritional-terms/', NutritionalTermListView.as_view(), name='nutritional-terms'),
 ]
