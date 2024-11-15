@@ -1,4 +1,5 @@
 import boto3
+import uuid
 from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -62,7 +63,11 @@ class UploadDetectionImageView(APIView):
         )
 
         s3_bucket_name = settings.AWS_S3_BUCKET_NAME
-        s3_file_name = f"{child.childId}/detections/{image.name}"
+        
+        # Generar un nombre único para el archivo
+        unique_id = uuid.uuid4().hex
+        file_extension = image.name.split('.')[-1]
+        s3_file_name = f"{child.childId}/detections/{unique_id}.{file_extension}"
 
         try:
             s3_client.upload_fileobj(image, s3_bucket_name, s3_file_name)
