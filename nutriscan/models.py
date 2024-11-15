@@ -35,7 +35,7 @@ class MalnutritionDetection(models.Model):
     detectionId = models.AutoField(primary_key=True)
     detectionDate = models.DateField(auto_now_add=True)  # Fecha de detección, se asigna automáticamente
     detectionResult = models.CharField(max_length=50)  # Resultado de la detección
-    detectionImageUrl = models.URLField()  # URL de la imagen en S3
+    detectionImageUrl = models.URLField(max_length=1000)  # URL de la imagen en S3
     expirationDate = models.DateTimeField(null=True, blank=True)  # Fecha de expiración de la URL
     child = models.ForeignKey(Child, on_delete=models.CASCADE, related_name="detections")
 
