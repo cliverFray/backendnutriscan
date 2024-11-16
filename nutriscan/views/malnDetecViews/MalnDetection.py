@@ -1,5 +1,6 @@
 import boto3
 import uuid
+from io import BytesIO
 from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -41,7 +42,11 @@ class UploadDetectionImageView(APIView):
         if not image:
             return Response({"error": "El archivo de imagen es requerido"}, status=status.HTTP_400_BAD_REQUEST)
         
-        detection_result = predict_image(image)
+        # Crear una copia de la imagen en memoria para pasar a `predict_image`
+        image_copy = BytesIO(image.read())
+        image.seek(0)  # Reiniciar el stream del archivo original para que esté listo para la carga
+
+        detection_result = predict_image(image_copy)
 
         if detection_result is None:
             return Response({"error": "No se pudo procesar la imagen con el modelo."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -70,7 +75,7 @@ class UploadDetectionImageView(APIView):
         s3_file_name = f"{child.childId}/detections/{unique_id}.{file_extension}"
 
         try:
-            s3_client.upload_fileobj(image.file, s3_bucket_name, s3_file_name)
+            s3_client.upload_fileobj(image, s3_bucket_name, s3_file_name)
             
         except Exception as e:
             return Response({"error": f"Error al subir la imagen: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
