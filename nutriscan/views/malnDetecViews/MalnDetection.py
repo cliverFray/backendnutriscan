@@ -11,6 +11,7 @@ from cnnmodel.modelHandler import predict_image_from_url
 from cnnmodel.modelHandler import predict_image
 from ...utils.recommendationGenerator import RecommendationGenerator
 from datetime import datetime, timedelta
+from django.utils import timezone
 
 class UploadDetectionImageView(APIView):
     permission_classes = [IsAuthenticated]
@@ -91,7 +92,7 @@ class UploadDetectionImageView(APIView):
         detection = MalnutritionDetection.objects.create(
             detectionImageUrl=image_url,
             detectionResult=readable_result,
-            expirationDate = datetime.now() + timedelta(hours=1),  # Establecer la nueva fecha de expiración
+            expirationDate = timezone.localtime(timezone.now() + timedelta(hours=1)),  # Establecer la nueva fecha de expiración
             child=child
         )
 
