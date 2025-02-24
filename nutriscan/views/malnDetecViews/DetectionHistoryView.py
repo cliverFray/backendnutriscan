@@ -5,8 +5,10 @@ from rest_framework.permissions import IsAuthenticated
 from ...models import Child, MalnutritionDetection
 from datetime import datetime, timedelta
 from ...serializers.malnDetecSerializers.MalnutritionDetectionSerializer import MalnutritionDetectionSerializer
+import boto3
 
 from django.conf import settings
+from urllib.parse import urlparse
 
 class DetectionHistoryView(APIView):
     permission_classes = [IsAuthenticated]
@@ -23,6 +25,11 @@ class DetectionHistoryView(APIView):
             return url
         except Exception as e:
             return None
+    
+    def get_object_name_from_url(url):
+        parsed_url = urlparse(url)
+        object_key = parsed_url.path.lstrip('/')  # Elimina la barra inicial
+        return object_key
 
     def get(self, request):
         user = request.user
@@ -40,7 +47,8 @@ class DetectionHistoryView(APIView):
         for detection in detections:
             # Verificar si la URL firmada ha expirado
             if detection.expirationDate and datetime.now() > detection.expirationDate:
-                new_image_url = self.generate_presigned_url(s3_client, settings.AWS_S3_BUCKET_NAME, detection.detectionImageUrl.split('/')[-1])
+                object_name = self.get_object_name_from_url(detection.detectionImageUrl)
+                new_image_url = self.generate_presigned_url(s3_client, settings.AWS_S3_BUCKET_NAME, object_name)
                 if new_image_url:
                     detection.detectionImageUrl = new_image_url
                     detection.expirationDate = datetime.now() + timedelta(hours=1)
