@@ -11,9 +11,10 @@ import boto3
 from django.conf import settings
 from urllib.parse import urlparse
 
+
 class DetectionHistoryView(APIView):
     permission_classes = [IsAuthenticated]
-    http_method_names = ['get']  # Solo permite POST
+    http_method_names = ['get']  # Solo permite GET
 
     def generate_presigned_url(self, s3_client, bucket_name, object_name, expiration=3600):
         """Genera una URL firmada para acceder al archivo S3"""
@@ -26,8 +27,8 @@ class DetectionHistoryView(APIView):
             return url
         except Exception as e:
             return None
-    
-    def get_object_name_from_url(self,url):
+
+    def get_object_name_from_url(self, url):
         parsed_url = urlparse(url)
         object_key = parsed_url.path.lstrip('/')  # Elimina la barra inicial
         return object_key
@@ -42,7 +43,7 @@ class DetectionHistoryView(APIView):
             aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
             region_name=settings.AWS_REGION
         )
-        
+
         # Serializar las detecciones con los datos necesarios
         serialized_data = []
         for detection in detections:
@@ -54,19 +55,20 @@ class DetectionHistoryView(APIView):
                 if timezone.now() > detection.expirationDate:
                     object_name = self.get_object_name_from_url(detection.detectionImageUrl)
                     new_image_url = self.generate_presigned_url(s3_client, settings.AWS_S3_BUCKET_NAME, object_name)
+
                     if new_image_url:
                         detection.detectionImageUrl = new_image_url
                         detection.expirationDate = timezone.localtime(timezone.now() + timedelta(hours=1))
                         detection.save()
-            
-                    # Agregar los datos al resultado
-                    serialized_data.append({
-                        "detectionId": detection.detectionId,
-                        "detectionDate": detection.detectionDate,
-                        "detectionResult": detection.detectionResult,
-                        "detectionImageUrl": detection.detectionImageUrl,
-                        "childId": detection.child.childId,
-                        "childName": detection.child.childName
-                    })
+
+            # Agregar los datos al resultado
+            serialized_data.append({
+                "detectionId": detection.detectionId,
+                "detectionDate": detection.detectionDate,
+                "detectionResult": detection.detectionResult,
+                "detectionImageUrl": detection.detectionImageUrl,
+                "childId": detection.child.childId,
+                "childName": detection.child.childName
+            })
 
         return Response(serialized_data, status=status.HTTP_200_OK)
