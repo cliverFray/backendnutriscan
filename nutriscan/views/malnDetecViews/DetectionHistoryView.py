@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from ...models import Child, MalnutritionDetection
 from datetime import datetime, timedelta
+from django.utils import timezone
 from ...serializers.malnDetecSerializers.MalnutritionDetectionSerializer import MalnutritionDetectionSerializer
 import boto3
 
@@ -46,22 +47,26 @@ class DetectionHistoryView(APIView):
         serialized_data = []
         for detection in detections:
             # Verificar si la URL firmada ha expirado
-            if detection.expirationDate and datetime.now() > detection.expirationDate:
-                object_name = self.get_object_name_from_url(detection.detectionImageUrl)
-                new_image_url = self.generate_presigned_url(s3_client, settings.AWS_S3_BUCKET_NAME, object_name)
-                if new_image_url:
-                    detection.detectionImageUrl = new_image_url
-                    detection.expirationDate = datetime.now() + timedelta(hours=1)
-                    detection.save()
+            if detection.expirationDate:
+                if detection.expirationDate.tzinfo is None:  # Si es naive, hacerla "aware"
+                    detection.expirationDate = timezone.make_aware(detection.expirationDate, timezone.get_current_timezone())
+
+                if timezone.now() > detection.expirationDate:
+                    object_name = self.get_object_name_from_url(detection.detectionImageUrl)
+                    new_image_url = self.generate_presigned_url(s3_client, settings.AWS_S3_BUCKET_NAME, object_name)
+                    if new_image_url:
+                        detection.detectionImageUrl = new_image_url
+                        detection.expirationDate = timezone.localtime(timezone.now() + timedelta(hours=1))
+                        detection.save()
             
-            # Agregar los datos al resultado
-            serialized_data.append({
-                "detectionId": detection.detectionId,
-                "detectionDate": detection.detectionDate,
-                "detectionResult": detection.detectionResult,
-                "detectionImageUrl": detection.detectionImageUrl,
-                "childId": detection.child.childId,
-                "childName": detection.child.childName
-            })
+                    # Agregar los datos al resultado
+                    serialized_data.append({
+                        "detectionId": detection.detectionId,
+                        "detectionDate": detection.detectionDate,
+                        "detectionResult": detection.detectionResult,
+                        "detectionImageUrl": detection.detectionImageUrl,
+                        "childId": detection.child.childId,
+                        "childName": detection.child.childName
+                    })
 
         return Response(serialized_data, status=status.HTTP_200_OK)
