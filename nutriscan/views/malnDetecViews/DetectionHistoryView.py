@@ -26,7 +26,7 @@ class DetectionHistoryView(APIView):
         except Exception as e:
             return None
     
-    def get_object_name_from_url(url):
+    def get_object_name_from_url(self,url):
         parsed_url = urlparse(url)
         object_key = parsed_url.path.lstrip('/')  # Elimina la barra inicial
         return object_key
