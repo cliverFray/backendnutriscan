@@ -125,3 +125,44 @@ class NutritionalTerm(models.Model):
 
     def __str__(self):
         return self.name
+
+
+#tablas para datos estaticos
+
+class AppInfo(models.Model):
+    appName = models.CharField(max_length=100, default="NutriScan")
+    appVersion = models.CharField(max_length=10, default="1.0.0")
+    developer = models.CharField(max_length=100, default="Equipo de NutriScan")
+    description = models.TextField(
+        default="Esta aplicación tiene como objetivo ayudar a los padres a monitorear la nutrición infantil y mejorar la calidad de vida."
+    )
+    created_at = models.DateTimeField(auto_now_add=True)  # Fecha de creación automática
+    updated_at = models.DateTimeField(auto_now=True)      # Fecha de actualización automática
+
+    def __str__(self):
+        return f"{self.appName} - {self.appVersion}"
+
+class Feedback(models.Model):
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
+    message = models.TextField()
+    date_created = models.DateTimeField(auto_now_add=True)
+    date_modified = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Feedback de {self.user.username}"
+
+class PrivacyPolicy(models.Model):
+    content = models.TextField()
+    date_created = models.DateTimeField(auto_now_add=True)
+    date_modified = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'Política de Privacidad - {self.date_modified.strftime("%d/%m/%Y")}'
+
+class TermsAndConditions(models.Model):
+    content = models.TextField()
+    date_created = models.DateTimeField(auto_now_add=True)
+    date_modified = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'Términos y Condiciones - {self.date_modified.strftime("%d/%m/%Y")}'

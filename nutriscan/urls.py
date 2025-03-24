@@ -50,6 +50,12 @@ from .views.nutritionalTerm.NutritionalTermListView import NutritionalTermListVi
 from .views.graphics.GrowthChartDataView import GrowthChartDataView
 from .views.graphics.DetectionCategoryChartView import DetectionCategoryChartView
 
+#Static Info
+from .views.statycInfo.AppInfoView import AppInfoView
+from .views.statycInfo.FeedbackView import FeedbackView
+from .views.statycInfo.PrivacyPolicyView import PrivacyPolicyView
+from .views.statycInfo.TermsAndConditionsView import TermsAndConditionsView
+
 urlpatterns = [
     path('register/', UserRegisterView.as_view(), name='register'),
     path('login/', UserLoginView.as_view(), name='login'),
@@ -81,4 +87,10 @@ urlpatterns = [
     path('generate_presigned_url/<int:detection_id>/', GenerateNewPresignedUrlView.as_view(), name='generate_presigned_url'),
     path('nutrition-tips/', NutritionTipListView.as_view(), name='nutrition-tip-list'),
     path('nutritional-terms/', NutritionalTermListView.as_view(), name='nutritional-terms'),
+
+    #static Info
+    path('app-info/', AppInfoView.as_view(), name='app_info'),
+    path('feedback/', FeedbackView.as_view(), name='feedback'),
+    path('privacy-policy/', PrivacyPolicyView.as_view(), name='privacy-policy'),
+    path('terms-and-conditions/', TermsAndConditionsView.as_view(), name='terms-and-conditions'),
 ]
