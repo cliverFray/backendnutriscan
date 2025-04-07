@@ -89,7 +89,7 @@ urlpatterns = [
     path('nutritional-terms/', NutritionalTermListView.as_view(), name='nutritional-terms'),
 
     #static Info
-    path('app-info/', AppInfoView.as_view(), name='app_info'),
+    path('app-info/', AppInfoView.as_view(), name='app-info'),
     path('feedback/', FeedbackView.as_view(), name='feedback'),
     path('privacy-policy/', PrivacyPolicyView.as_view(), name='privacy-policy'),
     path('terms-and-conditions/', TermsAndConditionsView.as_view(), name='terms-and-conditions'),

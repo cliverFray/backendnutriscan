@@ -8,6 +8,7 @@ from nutriscan.models import AditionalInfoUser
 from ...serializers.userSerializers.UserRegisterSerializer import UserRegisterSerializer, AditionalInfoUserSerializer
 
 from django.db import IntegrityError
+from rest_framework.exceptions import ValidationError
 
 class UserRegisterView(APIView):
     http_method_names = ['post']  # Solo permite POST
@@ -21,10 +22,10 @@ class UserRegisterView(APIView):
 
         # Revisa si el DNI ya existe en la base de datos
         if AditionalInfoUser.objects.filter(userDNI=aditional_info_data['userDNI']).exists():
-            return Response({"error": "El DNI ya existe en el sistema."}, status=status.HTTP_400_BAD_REQUEST)
-        
+            raise ValidationError({"userDNI": "Este DNI ya existe en el sistema."})
+
         if AditionalInfoUser.objects.filter(userPhone=aditional_info_data['userPhone']).exists():
-            return Response({"error": "El numero de telefono ya existe en el sistema."}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({"userPhone": "Este número de teléfono ya existe en el sistema."})
 
         user_serializer = UserRegisterSerializer(data=user_data)
         if user_serializer.is_valid():
