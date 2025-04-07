@@ -1,50 +1,71 @@
 import boto3
 import random
+import logging
 from datetime import timedelta
 from django.conf import settings
 from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from ....models import VerificationCode
+from ....models import VerificationCode, AditionalInfoUser
 from django.utils.translation import gettext_lazy as _
+
+logger = logging.getLogger(__name__)
 
 class GenerateAndSendVerificationCodeView(APIView):
     http_method_names = ['post']
 
     def post(self, request):
-        # Obtener el número de teléfono del usuario
         phone_number = request.data.get('phone')
+        dni = request.data.get('dni')
+        
         if not phone_number:
             return Response({
                 "codigo": "telefono_requerido",
                 "mensaje": _("Número de teléfono es requerido")
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Generar un código de 6 dígitos
+        if not phone_number.isdigit() or len(phone_number) != 9:
+            return Response({
+                "codigo": "telefono_invalido",
+                "mensaje": _("El número de teléfono debe contener 9 dígitos.")
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        if AditionalInfoUser.objects.filter(userPhone=phone_number).exists():
+            return Response({'error': 'El número de teléfono ya está registrado.'}, status=400)
+
+        if AditionalInfoUser.objects.filter(userDNI=dni).exists():
+            return Response({'error': 'El DNI ya está registrado.'}, status=400)
+        
         verification_code = str(random.randint(100000, 999999))
 
-        # Configurar el cliente SNS de AWS
-        sns_client = boto3.client(
-            'sns',
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-            region_name=settings.AWS_REGION
-        )
-
-        # Enviar el SMS con el código de verificación
         try:
+            sns_client = boto3.client(
+                'sns',
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                region_name=settings.AWS_REGION
+            )
+
             sns_client.publish(
                 PhoneNumber=f"+51{phone_number}",
                 Message=f"Tu código de verificación de NutriScan es {verification_code}. Expira en 10 minutos"
             )
-        except Exception as e:
+
+        except boto3.exceptions.Boto3Error as e:
+            logger.error(f"Error con boto3 al enviar SMS: {str(e)}")
             return Response({
                 "codigo": "error_envio_sms",
-                "mensaje": _("Error al enviar SMS. Por favor intenta de nuevo.")
+                "mensaje": _("No se pudo enviar el código por SMS. Intenta más tarde.")
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        # Guardar el código en la base de datos con expiración de 10 minutos
+        except Exception as e:
+            logger.exception("Error inesperado al enviar SMS")
+            return Response({
+                "codigo": "error_interno",
+                "mensaje": _("Ocurrió un error inesperado. Intenta nuevamente.")
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         expiration_time = timezone.now() + timedelta(minutes=10)
         VerificationCode.objects.create(
             phone=phone_number,
