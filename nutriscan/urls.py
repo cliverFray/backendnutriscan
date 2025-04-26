@@ -11,7 +11,7 @@ from .views.userViews.ResetPasswordView import ResetPasswordView
 from .views.userViews.DeleteAccountView import DeleteAccountView
 from .views.userViews.UserProfileUpdateView import UserProfileUpdateView
 from .views.userViews.ResendPasswordResetCodeView import ResendPasswordResetCodeView
-from .views.userViews.SendWelcomeEmailView import SendWelcomeEmailView
+
 from .views.userViews.UserProfileRetrieveView import UserProfileRetrieveView
 
 
@@ -21,6 +21,9 @@ from .views.userViews.identityVerification.ResendVerificationCodeView import Res
 from .views.userViews.identityVerification.GenerateAndSendVerificationCodeView import GenerateAndSendVerificationCodeView
 
 from .views.userViews.UserProfileView import UserProfileView
+
+from .views.userViews.ConfirmAccountView import ConfirmAccountView
+from .views.userViews.ResendConfirmationEmailView import ResendConfirmationEmailView
 
 #child
 from .views.child.ListChildrenView import ListChildrenView
@@ -56,6 +59,9 @@ from .views.statycInfo.FeedbackView import FeedbackView
 from .views.statycInfo.PrivacyPolicyView import PrivacyPolicyView
 from .views.statycInfo.TermsAndConditionsView import TermsAndConditionsView
 
+#cerrar sesion
+from .views.session.LogoutView import LogoutView
+
 urlpatterns = [
     path('register/', UserRegisterView.as_view(), name='register'),
     path('login/', UserLoginView.as_view(), name='login'),
@@ -69,16 +75,19 @@ urlpatterns = [
     path('password-reset/verify/', VerifyPasswordResetCodeView.as_view(), name='verify_password_reset_code'),
     path('password-reset/reset/', ResetPasswordView.as_view(), name='reset_password'),
     path('password-reset/resend/', ResendPasswordResetCodeView.as_view(), name='resend_password_reset_code'),
-    path('notifications/', NotificationView.as_view(), name='notifications'),#falta configurar en EC2 se configura y se prueba
-    path('account/delete/', DeleteAccountView.as_view(), name='delete_account'),#falata probar
+    #path('notifications/', NotificationView.as_view(), name='notifications'),#falta configurar en EC2 se configura y se prueba
+    path('account/delete/', DeleteAccountView.as_view(), name='delete_account'),
     path('user/update/', UserProfileUpdateView.as_view(), name='update-user'),
     path('verification/generate-send-code/', GenerateAndSendVerificationCodeView.as_view(), name='generate_send_verification_code'),
     path('verification/verify-code/', VerifyCodeView.as_view(), name='verify_code'),
     path('verification/resend-code/', ResendVerificationCodeView.as_view(), name='resend_verification_code'),
-    path('welcome-email/', SendWelcomeEmailView.as_view(), name='send_welcome_email'),#falta configurar el SES y probar 
-    path('inmediate-recomedations/<int:child_id>/', GenerateRecommendationView.as_view(), name='inmediate_recomendation'),#falta configurar el SES y probar
-    path('growth-chart/<int:child_id>/', GrowthChartDataView.as_view(), name='growth_chart_data'),
-    path('detections/chart/<int:child_id>/', DetectionCategoryChartView.as_view(), name='detection_category_chart'),
+    
+    path('inmediate-recomedations/<int:child_id>/', GenerateRecommendationView.as_view(), name='inmediate_recomendation'),
+
+    #statistycs
+    path('/children/<int: child_id>/growth-chart/', GrowthChartDataView.as_view(), name='growth_chart_data'),
+    path('/children/<int: child_id>/detection-chart/', DetectionCategoryChartView.as_view(), name='detection_category_chart'),
+
     path('detections/history/', DetectionHistoryView.as_view(), name='detection_history'),
     path('validate-image/', ValidateImageView.as_view(), name='validate_image'),
     path('user/profile/', UserProfileView.as_view(), name='user_profile'),
@@ -87,10 +96,14 @@ urlpatterns = [
     path('generate_presigned_url/<int:detection_id>/', GenerateNewPresignedUrlView.as_view(), name='generate_presigned_url'),
     path('nutrition-tips/', NutritionTipListView.as_view(), name='nutrition-tip-list'),
     path('nutritional-terms/', NutritionalTermListView.as_view(), name='nutritional-terms'),
+    path('confirmar-cuenta/<int:user_id>/', ConfirmAccountView.as_view(), name='confirm_account'),
+    path('resend-confirmation/', ResendConfirmationEmailView.as_view(), name='resend-confirmation'),
 
     #static Info
     path('app-info/', AppInfoView.as_view(), name='app-info'),
     path('feedback/', FeedbackView.as_view(), name='feedback'),
     path('privacy-policy/', PrivacyPolicyView.as_view(), name='privacy-policy'),
     path('terms-and-conditions/', TermsAndConditionsView.as_view(), name='terms-and-conditions'),
+
+    path('user/logout/', LogoutView.as_view(), name='logout'),
 ]
