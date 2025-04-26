@@ -38,6 +38,7 @@ def home(request):
 urlpatterns = [
     path('', home, name='home'),  # Define una vista para la raíz
     path('nutriscan/', include('nutriscan.urls')),  # Incluye las URLs de tu app
+    path('nutriscanapp/admin/', admin.site.urls),
 ]
 
 if settings.DEBUG:
