@@ -11,7 +11,10 @@ class GrowthChartDataView(APIView):
 
     def get(self, request, child_id):
         user = request.user
-        child = get_object_or_404(Child, pk=child_id, user=user)
+        try:
+            child = Child.objects.get(pk=child_id, user=user)
+        except Child.DoesNotExist:
+            return Response({"error": "El niño no pertenece al usuario autenticado o no existe."}, status=status.HTTP_404_NOT_FOUND)
 
         growth_data = GrowthHistory.objects.filter(child=child).order_by("date_recorded")
 
