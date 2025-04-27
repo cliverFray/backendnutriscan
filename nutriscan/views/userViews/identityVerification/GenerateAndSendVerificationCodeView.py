@@ -6,6 +6,7 @@ from django.conf import settings
 from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.contrib.auth.models import User
 from rest_framework import status
 from ....models import VerificationCode, AditionalInfoUser
 from django.utils.translation import gettext_lazy as _
@@ -18,6 +19,7 @@ class GenerateAndSendVerificationCodeView(APIView):
     def post(self, request):
         phone_number = request.data.get('phone')
         dni = request.data.get('dni')
+        email = request.data.get('email')
         
         if not phone_number:
             return Response({
@@ -32,10 +34,24 @@ class GenerateAndSendVerificationCodeView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         if AditionalInfoUser.objects.filter(userPhone=phone_number).exists():
-            return Response({'error': 'El número de teléfono ya está registrado.'}, status=400)
+            return Response({
+                "codigo": "telefono_registrado",
+                "mensaje": _("El número de teléfono ya está registrado.")
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         if AditionalInfoUser.objects.filter(userDNI=dni).exists():
-            return Response({'error': 'El DNI ya está registrado.'}, status=400)
+            return Response({
+                "codigo": "dni_registrado",
+                "mensaje": _("El DNI ya está registrado.")
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+
+        # Revisa si el correo ya está registrado
+        if User.objects.filter(email=email).exists():
+            return Response({
+                "codigo": "correo_registrado",
+                "mensaje": _("El correo ya está registrado.")
+            }, status=status.HTTP_400_BAD_REQUEST)
         
         verification_code = str(random.randint(100000, 999999))
 
