@@ -85,8 +85,8 @@ urlpatterns = [
     path('inmediate-recomedations/<int:child_id>/', GenerateRecommendationView.as_view(), name='inmediate_recomendation'),
 
     #statistycs
-    path('/children/<int:child_id>/growth-chart/', GrowthChartDataView.as_view(), name='growth_chart_data'),
-    path('/children/<int:child_id>/detection-chart/', DetectionCategoryChartView.as_view(), name='detection_category_chart'),
+    path('children/<int:child_id>/growth-chart/', GrowthChartDataView.as_view(), name='growth_chart_data'),
+    path('children/<int:child_id>/detection-chart/', DetectionCategoryChartView.as_view(), name='detection_category_chart'),
 
     path('detections/history/', DetectionHistoryView.as_view(), name='detection_history'),
     path('validate-image/', ValidateImageView.as_view(), name='validate_image'),
