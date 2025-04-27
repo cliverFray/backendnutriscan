@@ -9,11 +9,21 @@ from django.utils import timezone
 from ....models import VerificationCode, AditionalInfoUser
 from django.utils.translation import gettext_lazy as _
 
+from ....utils.SendotpByEmail import send_OTP_email
+from django.contrib.auth.models import User
+
 class ResendVerificationCodeView(APIView):
     http_method_names = ['post']  # Solo permite POST
 
     def post(self, request):
         phone_number = request.data.get('phone')
+        email = request.data.get('email')
+
+        user = User(
+            username=email,  # Usamos email como username
+            email=email,
+            first_name="",  # Opcional
+        )
         
         if not phone_number:
             return Response({
@@ -53,6 +63,16 @@ class ResendVerificationCodeView(APIView):
                 "mensaje": _("Error al enviar SMS. Por favor intenta de nuevo.")
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+        # Enviar código por correo electrónico
+        try:
+            
+            send_OTP_email(user,verification_code)  # Enviar el correo de bienvenida (se puede cambiar el asunto y cuerpo según sea necesario)
+        except Exception as e:
+            return Response({
+                "codigo": "error_envio_correo",
+                "mensaje": _("No se pudo enviar el correo electrónico. Intenta más tarde.")
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
         # Guardar el nuevo código en la base de datos con expiración de 10 minutos
         expiration_time = timezone.now() + timedelta(minutes=10)
         VerificationCode.objects.create(
