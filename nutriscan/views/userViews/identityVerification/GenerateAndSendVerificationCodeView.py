@@ -13,6 +13,8 @@ from django.utils.translation import gettext_lazy as _
 
 logger = logging.getLogger(__name__)
 
+from ....utils.SendotpByEmail import send_OTP_email
+
 class GenerateAndSendVerificationCodeView(APIView):
     http_method_names = ['post']
 
@@ -20,6 +22,12 @@ class GenerateAndSendVerificationCodeView(APIView):
         phone_number = request.data.get('phone')
         dni = request.data.get('dni')
         email = request.data.get('email')
+
+        user = User(
+            username=email,  # Usamos email como username
+            email=email,
+            first_name="",  # Opcional
+        )
         
         if not phone_number:
             return Response({
@@ -81,6 +89,18 @@ class GenerateAndSendVerificationCodeView(APIView):
                 "codigo": "error_interno",
                 "mensaje": _("Ocurrió un error inesperado. Intenta nuevamente.")
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Enviar código por correo electrónico
+        try:
+            
+            send_OTP_email(user,verification_code)  # Enviar el correo de bienvenida (se puede cambiar el asunto y cuerpo según sea necesario)
+        except Exception as e:
+            logger.error(f"Error al enviar correo a {email}: {str(e)}")
+            return Response({
+                "codigo": "error_envio_correo",
+                "mensaje": _("No se pudo enviar el correo electrónico. Intenta más tarde.")
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
         expiration_time = timezone.now() + timedelta(minutes=10)
         VerificationCode.objects.create(

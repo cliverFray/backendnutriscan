@@ -8,11 +8,13 @@ from rest_framework.response import Response
 from rest_framework import status
 from ...models import AditionalInfoUser, PasswordResetCode
 
+from ...utils.SendCodPassEmail import send_cod_pass_email
+
 class ResendPasswordResetCodeView(APIView):
     http_method_names = ['post']  # Solo permite POST
     def post(self, request):
         phone = request.data.get("phone")
-
+        email = request.data.get("email")
         # Verificar que el número de teléfono existe
         try:
             user_info = AditionalInfoUser.objects.get(userPhone=phone)
@@ -42,6 +44,17 @@ class ResendPasswordResetCodeView(APIView):
                 PhoneNumber=f"+51{phone}",  # Cambia el prefijo según el país
                 Message=message
             )
-            return Response({"message": "Nuevo código de restablecimiento de contraseña enviado exitosamente."}, status=status.HTTP_200_OK)
+            
         except Exception as e:
             return Response({"error": f"Error en el envío de SMS: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Enviar código por correo electrónico
+        try:
+            send_cod_pass_email(user, reset_code)  # <-- corregido aquí
+        except Exception as e:
+            return Response({
+                "codigo": "error_envio_correo",
+                "mensaje": "No se pudo enviar el correo electrónico. Intenta más tarde."
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({"message": "Código de restablecimiento de contraseña enviado exitosamente por SMS y correo electrónico."}, status=status.HTTP_200_OK)
