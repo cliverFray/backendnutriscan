@@ -28,7 +28,7 @@ class GrowthChartDataView(APIView):
             "dates": [record.date_recorded.strftime("%Y-%m-%d") for record in growth_data],
             "weights": [float(record.weight) for record in growth_data],
             "heights": [float(record.height) for record in growth_data],
-            "child_name": child.name,
+            "child_name": child.childName,
         }
 
         return Response(chart_data, status=status.HTTP_200_OK)

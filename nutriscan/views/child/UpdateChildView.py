@@ -5,6 +5,10 @@ from ...models import Child,GrowthHistory
 from ...serializers.childSerializers.childSerializer import ChildSerializer
 from rest_framework.permissions import IsAuthenticated
 
+from django.utils import timezone
+
+from datetime import date
+
 class UpdateChildView(APIView):
     permission_classes = [IsAuthenticated]
     http_method_names = ['put']  # Solo permite el método PUT
@@ -31,7 +35,7 @@ class UpdateChildView(APIView):
 
             if new_weight is not None and new_height is not None:
                 # Opcional: evitar duplicar si ya existe hoy
-                exists_today = GrowthHistory.objects.filter(child=updated_child, date_recorded=date.today()).exists()
+                exists_today = GrowthHistory.objects.filter(child=updated_child, date_recorded=timezone.now()).exists()
                 if not exists_today:
                     GrowthHistory.objects.create(
                         child=updated_child,
