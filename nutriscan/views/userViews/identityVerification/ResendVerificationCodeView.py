@@ -22,13 +22,13 @@ class ResendVerificationCodeView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         # Verificar si el número de teléfono existe en AditionalInfoUser
-        try:
+        """ try:
             user_info = AditionalInfoUser.objects.get(userPhone=phone_number)
         except AditionalInfoUser.DoesNotExist:
             return Response({
                 "codigo": "telefono_no_encontrado",
                 "mensaje": _("Número de teléfono no encontrado")
-            }, status=status.HTTP_404_NOT_FOUND)
+            }, status=status.HTTP_404_NOT_FOUND) """
 
         # Generar un nuevo código de 6 dígitos
         verification_code = str(random.randint(100000, 999999))
