@@ -30,6 +30,9 @@ class DetectionCategoryChartView(APIView):
                 status=status.HTTP_204_NO_CONTENT
             )
 
-        chart_data = {item["detectionResult"]: item["count"] for item in category_counts}
+        chart_data = [
+            {"category": item["detectionResult"], "count": item["count"]}
+            for item in category_counts
+        ]
 
         return Response(chart_data, status=status.HTTP_200_OK)
