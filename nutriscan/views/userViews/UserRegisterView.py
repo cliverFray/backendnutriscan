@@ -45,7 +45,7 @@ class UserRegisterView(APIView):
                     email=validated_user_data['email'],
                     password=validated_user_data['password']
                 )
-                user.is_active = False
+                #user.is_active = False
                 user.save()
 
                 aditional_info_serializer = AditionalInfoUserSerializer(data=aditional_info_data)
