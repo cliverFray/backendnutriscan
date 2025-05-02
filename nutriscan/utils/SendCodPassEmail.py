@@ -1,5 +1,6 @@
 import boto3
 from django.conf import settings
+from botocore.exceptions import ClientError
 
 def send_cod_pass_email(user,otp):
     ses_client = boto3.client(
@@ -22,14 +23,19 @@ def send_cod_pass_email(user,otp):
     </html>
     """
 
-    ses_client.send_email(
-        Source=settings.AWS_SES_SOURCE_EMAIL,
-        Destination={'ToAddresses': [user.email]},
-        Message={
-            'Subject': {'Data': subject},
-            'Body': {
-                'Text': {'Data': body_text},
-                'Html': {'Data': body_html}
-            }
-        }
-    )
+    try:
+        response = ses_client.send_email(
+            Source=settings.AWS_SES_SOURCE_EMAIL,
+            Destination={'ToAddresses': [user.email]},
+            Message={
+                'Subject': {'Data': subject, 'Charset': 'UTF-8'},
+                'Body': {
+                    'Text': {'Data': body_text, 'Charset': 'UTF-8'},
+                    'Html': {'Data': body_html, 'Charset': 'UTF-8'}
+                }
+            },
+            ReplyToAddresses=[settings.AWS_SES_REPLYTO_EMAIL]  # Agregado Reply-To
+        )
+        return response
+    except ClientError as e:
+        raise Exception(f"Error al enviar el correo de bienvenida: {e.response['Error']['Message']}")

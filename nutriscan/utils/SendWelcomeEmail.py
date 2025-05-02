@@ -1,10 +1,6 @@
 import boto3
+from botocore.exceptions import ClientError
 from django.conf import settings
-from django.contrib.auth.models import User
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
 
 def send_welcome_email(user):
     ses_client = boto3.client(
@@ -30,14 +26,19 @@ def send_welcome_email(user):
     </html>
     """
 
-    ses_client.send_email(
-        Source=settings.AWS_SES_SOURCE_EMAIL,
-        Destination={'ToAddresses': [user.email]},
-        Message={
-            'Subject': {'Data': subject},
-            'Body': {
-                'Text': {'Data': body_text},
-                'Html': {'Data': body_html}
-            }
-        }
-    )
+    try:
+        response = ses_client.send_email(
+            Source=settings.AWS_SES_SOURCE_EMAIL,
+            Destination={'ToAddresses': [user.email]},
+            Message={
+                'Subject': {'Data': subject, 'Charset': 'UTF-8'},
+                'Body': {
+                    'Text': {'Data': body_text, 'Charset': 'UTF-8'},
+                    'Html': {'Data': body_html, 'Charset': 'UTF-8'}
+                }
+            },
+            ReplyToAddresses=[settings.AWS_SES_REPLYTO_EMAIL]  # Agregado Reply-To
+        )
+        return response
+    except ClientError as e:
+        raise Exception(f"Error al enviar el correo de bienvenida: {e.response['Error']['Message']}")
