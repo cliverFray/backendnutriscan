@@ -63,6 +63,13 @@ class GenerateAndSendVerificationCodeView(APIView):
         
         verification_code = str(random.randint(100000, 999999))
 
+        # Intentar ambos envíos y registrar estado
+        sms_sent = False
+        email_sent = False
+        sms_error = ""
+        email_error = ""
+
+        # Envío SMS
         try:
             sns_client = boto3.client(
                 'sns',
@@ -70,47 +77,44 @@ class GenerateAndSendVerificationCodeView(APIView):
                 aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
                 region_name=settings.AWS_REGION
             )
-
             sns_client.publish(
                 PhoneNumber=f"+51{phone_number}",
                 Message=f"Tu código de verificación de NutriScan es {verification_code}. Expira en 10 minutos"
             )
-
-        except boto3.exceptions.Boto3Error as e:
-            logger.error(f"Error con boto3 al enviar SMS: {str(e)}")
-            return Response({
-                "codigo": "error_envio_sms",
-                "mensaje": _("No se pudo enviar el código por SMS. Intenta más tarde.")
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+            sms_sent = True
         except Exception as e:
-            logger.exception("Error inesperado al enviar SMS")
-            return Response({
-                "codigo": "error_interno",
-                "mensaje": _("Ocurrió un error inesperado. Intenta nuevamente.")
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            logger.error(f"Error al enviar SMS: {str(e)}")
+            sms_error = _("No se pudo enviar el código por SMS.")
 
-        # Enviar código por correo electrónico
+        # Envío Correo
         try:
-            
-            send_OTP_email(user,verification_code)  # Enviar el correo de bienvenida (se puede cambiar el asunto y cuerpo según sea necesario)
+            send_OTP_email(user, verification_code)
+            email_sent = True
         except Exception as e:
-            logger.error(f"Error al enviar correo a {email}: {str(e)}")
+            logger.error(f"Error al enviar correo: {str(e)}")
+            email_error = _("No se pudo enviar el correo electrónico.")
+
+        # Solo guardamos el código si al menos uno fue enviado
+        if sms_sent or email_sent:
+            expiration_time = timezone.now() + timedelta(minutes=10)
+            VerificationCode.objects.create(
+                phone=phone_number,
+                code=verification_code,
+                expiration=expiration_time,
+                created_at=timezone.now()
+            )
             return Response({
-                "codigo": "error_envio_correo",
-                "mensaje": _("No se pudo enviar el correo electrónico. Intenta más tarde.")
+                "codigo": "parcial" if not (sms_sent and email_sent) else "exito",
+                "mensaje": _("Código enviado con éxito.") if sms_sent and email_sent else _("Hubo problemas en algunos envíos."),
+                "sms_enviado": sms_sent,
+                "email_enviado": email_sent,
+                "sms_error": sms_error,
+                "email_error": email_error
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                "codigo": "error_envio_ambos",
+                "mensaje": _("No se pudo enviar el código ni por SMS ni por correo."),
+                "sms_error": sms_error,
+                "email_error": email_error
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-        expiration_time = timezone.now() + timedelta(minutes=10)
-        VerificationCode.objects.create(
-            phone=phone_number,
-            code=verification_code,
-            expiration=expiration_time,
-            created_at=timezone.now()
-        )
-
-        return Response({
-            "codigo": "exito",
-            "mensaje": _("Código de verificación enviado correctamente")
-        }, status=status.HTTP_200_OK)
