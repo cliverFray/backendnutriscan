@@ -25,7 +25,12 @@ class RequestPasswordResetView(APIView):
         except AditionalInfoUser.DoesNotExist:
             return Response({"error": "Número de teléfono no encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
-        
+        # Buscar usuario por teléfono
+        try:
+            user_info = AditionalInfoUser.objects.get(email=email)
+            user = user_info.user
+        except AditionalInfoUser.DoesNotExist:
+            return Response({"error": "Correo electronico no encontrado."}, status=status.HTTP_404_NOT_FOUND)
         
         # Generar un código de 6 dígitos
         reset_code = str(random.randint(100000, 999999))
