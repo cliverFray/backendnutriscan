@@ -5,6 +5,11 @@ import requests
 from io import BytesIO
 from .model_loader import load_model_from_s3  # Asegúrate de ajustar la ruta de importación según tu estructura de archivos
 
+
+#
+import pillow_heif
+pillow_heif.register_heif_opener()
+
 # Configurar el dispositivo (GPU o CPU)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

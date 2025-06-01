@@ -9,6 +9,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 import io
 
+#
+import pillow_heif
+pillow_heif.register_heif_opener()
+
 # Inicializar el detector de rostros MTCNN
 detector = MTCNN()
 
@@ -25,6 +29,7 @@ class ValidateImageView(APIView):
             return Response({"valid": False, "message": "No se proporcionó ninguna imagen."}, status=400)
         
         file = request.FILES['image']
+        file_name = file.name.lower()
         image_bytes = file.read()
 
         # Validación del tamaño de la imagen
@@ -32,14 +37,22 @@ class ValidateImageView(APIView):
             return Response({"valid": False, "message": "La foto es demasiado pesada."}, status=400)
 
         # Convertir la imagen en formato OpenCV
-        np_img = np.frombuffer(image_bytes, np.uint8)
-        img_cv = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
+        # Manejo especial para .heic
+        if file_name.endswith('.heic'):
+            try:
+                heif_img = Image.open(io.BytesIO(image_bytes)).convert('RGB')
+                img_rgb = np.array(heif_img)  # Convertir a array numpy (RGB)
+            except Exception as e:
+                return Response({"valid": False, "message": f"No se pudo procesar la imagen HEIC: {str(e)}"}, status=400)
+        else:
+            # Proceso normal para JPG/PNG
+            np_img = np.frombuffer(image_bytes, np.uint8)
+            img_cv = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
 
-        if img_cv is None:
-            return Response({"valid": False, "message": "Imagen no válida."}, status=400)
+            if img_cv is None:
+                return Response({"valid": False, "message": "Imagen no válida."}, status=400)
 
-        # Convertir la imagen a RGB (OpenCV usa BGR por defecto)
-        img_rgb = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB)
+            img_rgb = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB)
 
         # Detectar rostros
         faces = detector.detect_faces(img_rgb)
