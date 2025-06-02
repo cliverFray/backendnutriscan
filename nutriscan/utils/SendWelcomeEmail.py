@@ -20,7 +20,7 @@ def send_welcome_email(user):
         <h1>¡Bienvenido, {user.first_name}!</h1>
         <p>Gracias por registrarte en <strong>NutriScan</strong>. Estamos encantados de tenerte con nosotros.</p>
         <p>Por favor, confirma tu cuenta haciendo clic en el siguiente enlace:</p>
-        <p><a href='https://nutriscanapp.me/confirmar-cuenta/{user.id}/'>Confirmar mi cuenta</a></p>
+        <p><a href='https://nutriscanapp.me/nutriscan/confirmar-cuenta/{user.id}/'>Confirmar mi cuenta</a></p>
         <p>Si no solicitaste este registro, ignora este mensaje.</p>
     </body>
     </html>
