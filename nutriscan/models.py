@@ -8,6 +8,7 @@ class AditionalInfoUser(models.Model):
     userDNI = models.CharField(max_length=8, unique=True)
     userPhone = models.CharField(max_length=9, unique=True)
     userPlace = models.CharField(max_length=50)
+    is_confirmed = models.BooleanField(default=False)  # <--- nuevo campo
     # otros campos adicionales específicos del Cuidador
 
     def __str__(self):
