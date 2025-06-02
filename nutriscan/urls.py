@@ -84,6 +84,9 @@ urlpatterns = [
     
     path('inmediate-recomedations/<int:child_id>/', GenerateRecommendationView.as_view(), name='inmediate_recomendation'),
 
+    #Confirmar cuenta
+    path('confirmar-cuenta/<int:user_id>/', ConfirmAccountView.as_view(), name='confirmar-cuenta'),
+
     #statistycs
     path('children/<int:child_id>/growth-chart/', GrowthChartDataView.as_view(), name='growth_chart_data'),
     path('children/<int:child_id>/detection-chart/', DetectionCategoryChartView.as_view(), name='detection_category_chart'),
