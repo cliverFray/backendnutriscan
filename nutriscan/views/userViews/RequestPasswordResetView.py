@@ -18,32 +18,38 @@ class RequestPasswordResetView(APIView):
         email = request.data.get("email")
 
         
-        phonexist = False
-        emailexist = False
-        # Buscar usuario por teléfono
+        user_by_phone = None
+        user_by_email = None
+
         try:
-            user_info = AditionalInfoUser.objects.get(userPhone=phone)
-            user = user_info.user
+            user_info_phone = AditionalInfoUser.objects.get(userPhone=phone)
+            user_by_phone = user_info_phone.user
             phonexist = True
         except AditionalInfoUser.DoesNotExist:
-            #return Response({"error": "Número de teléfono no registrado."}, status=status.HTTP_404_NOT_FOUND)
             phonexist = False
 
-        # Buscar usuario por correo
         try:
-            user_info = AditionalInfoUser.objects.get(email=email)
-            user = user_info.user
+            user_info_email = AditionalInfoUser.objects.get(email=email)
+            user_by_email = user_info_email.user
             emailexist = True
         except AditionalInfoUser.DoesNotExist:
-            #return Response({"error": "Correo electronico no registrado."}, status=status.HTTP_404_NOT_FOUND)
             emailexist = False
-        
-        if  not phonexist and emailexist:
-            return Response({"error": "Número de teléfono no registrado."}, status=status.HTTP_404_NOT_FOUND)
-        elif phonexist and not emailexist:
-            return Response({"error": "Correo electronico no registrado."}, status=status.HTTP_404_NOT_FOUND)
-        elif not phonexist and not emailexist:
-            return Response({"error": "Correo electronico y numero de telefono no registrado."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Verifica que el usuario del teléfono y del correo sean el mismo
+        if phonexist and emailexist:
+            if user_by_phone != user_by_email:
+                return Response({
+                    "error": "El número de teléfono y el correo electrónico no pertenecen al mismo usuario."
+                }, status=status.HTTP_400_BAD_REQUEST)
+            user = user_by_phone
+        else:
+            if not phonexist and emailexist:
+                return Response({"error": "Número de teléfono no registrado."}, status=status.HTTP_404_NOT_FOUND)
+            elif phonexist and not emailexist:
+                return Response({"error": "Correo electronico no registrado."}, status=status.HTTP_404_NOT_FOUND)
+            elif not phonexist and not emailexist:
+                return Response({"error": "Correo electronico y numero de telefono no registrados."}, status=status.HTTP_404_NOT_FOUND)
+
         # Generar un código de 6 dígitos
         reset_code = str(random.randint(100000, 999999))
         
