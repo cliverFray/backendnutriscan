@@ -36,7 +36,8 @@ def send_OTP_email(user,otp):
             },
             ReplyToAddresses=[settings.AWS_SES_REPLYTO_EMAIL]  # Agregado Reply-To
         )
-        return response
+        return bool(response)
     except ClientError as e:
         # Aquí devuelves un dict sin MessageId, para que el llamador sepa que falló
-        return {'Error': e.response['Error']['Message']}
+        #return {'Error': e.response['Error']['Message']}
+        return False
