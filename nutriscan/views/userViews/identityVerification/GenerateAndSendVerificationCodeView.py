@@ -77,14 +77,11 @@ class GenerateAndSendVerificationCodeView(APIView):
                 aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
                 region_name=settings.AWS_REGION
             )
-            response = sns_client.publish(
+            sns_client.publish(
                 PhoneNumber=f"+51{phone_number}",
                 Message=f"Tu código de verificación de NutriScan es {verification_code}. Expira en 10 minutos"
             )
-            if response.get('MessageId'):
-                sms_sent = True
-            else:
-                sms_error = _("No se pudo enviar el código por SMS.")
+            sms_sent = True
         except boto3.exceptions.Boto3Error as e:
             logger.error(f"Error al enviar SMS: {str(e)}")
             sms_error = _("No se pudo enviar el código por SMS.")
@@ -95,11 +92,8 @@ class GenerateAndSendVerificationCodeView(APIView):
 
         # Envío Correo
         try:
-            email_response = send_OTP_email(user, verification_code)
-            if email_response.get('MessageId'):
-                email_sent = True
-            else:
-                email_error = _("No se pudo enviar el correo electrónico.")
+            send_OTP_email(user, verification_code)
+            email_sent = True
         except boto3.exceptions.Boto3Error as e:
             logger.error(f"Error al enviar correo: {str(e)}")
             email_error = _("No se pudo enviar el correo electrónico.")
