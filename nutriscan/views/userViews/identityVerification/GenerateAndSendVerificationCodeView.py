@@ -85,6 +85,10 @@ class GenerateAndSendVerificationCodeView(APIView):
                 sms_sent = True
             else:
                 sms_error = _("No se pudo enviar el código por SMS.")
+        except boto3.exceptions.Boto3Error as e:
+            logger.error(f"Error al enviar SMS: {str(e)}")
+            sms_error = _("No se pudo enviar el código por SMS.")
+            sms_sent = False
         except Exception as e:
             logger.error(f"Error al enviar SMS: {str(e)}")
             sms_error = _("No se pudo enviar el código por SMS.")
@@ -96,6 +100,10 @@ class GenerateAndSendVerificationCodeView(APIView):
                 email_sent = True
             else:
                 email_error = _("No se pudo enviar el correo electrónico.")
+        except boto3.exceptions.Boto3Error as e:
+            logger.error(f"Error al enviar correo: {str(e)}")
+            email_error = _("No se pudo enviar el correo electrónico.")
+            email_sent = False
         except Exception as e:
             logger.error(f"Error al enviar correo: {str(e)}")
             email_error = _("No se pudo enviar el correo electrónico.")
