@@ -47,8 +47,9 @@ class RequestPasswordResetView(APIView):
                 return Response({"error": "Número de teléfono no registrado."}, status=status.HTTP_404_NOT_FOUND)
             elif phonexist and not emailexist:
                 return Response({"error": "Correo electronico no registrado."}, status=status.HTTP_404_NOT_FOUND)
-            elif not phonexist and not emailexist:
+            else:
                 return Response({"error": "Correo electronico y numero de telefono no registrados."}, status=status.HTTP_404_NOT_FOUND)
+
 
         # Generar un código de 6 dígitos
         reset_code = str(random.randint(100000, 999999))
