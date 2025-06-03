@@ -18,20 +18,32 @@ class RequestPasswordResetView(APIView):
         email = request.data.get("email")
 
         
+        phonexist = False
+        emailexist = False
         # Buscar usuario por teléfono
         try:
             user_info = AditionalInfoUser.objects.get(userPhone=phone)
             user = user_info.user
+            phonexist = True
         except AditionalInfoUser.DoesNotExist:
-            return Response({"error": "Número de teléfono no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+            #return Response({"error": "Número de teléfono no registrado."}, status=status.HTTP_404_NOT_FOUND)
+            phonexist = False
 
-        # Buscar usuario por teléfono
+        # Buscar usuario por correo
         try:
             user_info = AditionalInfoUser.objects.get(email=email)
             user = user_info.user
+            emailexist = True
         except AditionalInfoUser.DoesNotExist:
-            return Response({"error": "Correo electronico no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+            #return Response({"error": "Correo electronico no registrado."}, status=status.HTTP_404_NOT_FOUND)
+            emailexist = False
         
+        if  not phonexist and emailexist:
+            return Response({"error": "Número de teléfono no registrado."}, status=status.HTTP_404_NOT_FOUND)
+        elif phonexist and not emailexist:
+            return Response({"error": "Correo electronico no registrado."}, status=status.HTTP_404_NOT_FOUND)
+        elif not phonexist and not emailexist:
+            return Response({"error": "Correo electronico y numero de telefono no registrado."}, status=status.HTTP_404_NOT_FOUND)
         # Generar un código de 6 dígitos
         reset_code = str(random.randint(100000, 999999))
         
