@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 
 from ....utils.SendotpByEmail import send_OTP_email
 
+from ....utils.send_OTP_sms import send_OTP_sms
+
 class GenerateAndSendVerificationCodeView(APIView):
     http_method_names = ['post']
 
@@ -73,36 +75,23 @@ class GenerateAndSendVerificationCodeView(APIView):
 
         # Envío SMS
         try:
-            sns_client = boto3.client(
-                'sns',
-                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                region_name=settings.AWS_REGION
-            )
-            sns_client.publish(
-                PhoneNumber=f"+51{phone_number}",
-                Message=f"Tu código de verificación de NutriScan es {verification_code}. Expira en 10 minutos"
-            )
-            sms_sent = True
-        except botocore.exceptions.ClientError as e:
-            logger.error(f"Error al enviar SMS: {str(e)}")
+            sms_sent = send_OTP_sms(f"+51{phone_number}", f"Tu código de verificación de NutriScan es {verification_code}. Expira en 10 minutos")
+            if not sms_sent:
+                sms_error = _("No se pudo enviar el código por SMS.")
+        except Exception as e:
+            logger.error(f"Error inesperado al enviar SMS: {str(e)}")
             sms_error = _("No se pudo enviar el código por SMS.")
             sms_sent = False
-        except Exception as e:
-            logger.error(f"Error al enviar SMS: {str(e)}")
-            sms_error = _("No se pudo enviar el código por SMS.")
 
         # Envío Correo
         try:
-            send_OTP_email(user, verification_code)
-            email_sent = True
-        except botocore.exceptions.ClientError as e:
-            logger.error(f"Error al enviar correo: {str(e)}")
+            email_sent = send_OTP_email(user, verification_code)
+            if not email_sent:
+                email_error = _("No se pudo enviar el correo electrónico.")
+        except Exception as e:
+            logger.error(f"Error inesperado al enviar correo: {str(e)}")
             email_error = _("No se pudo enviar el correo electrónico.")
             email_sent = False
-        except Exception as e:
-            logger.error(f"Error al enviar correo: {str(e)}")
-            email_error = _("No se pudo enviar el correo electrónico.")
 
         # Solo guardamos el código si al menos uno fue enviado
         if sms_sent or email_sent:
