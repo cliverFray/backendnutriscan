@@ -29,8 +29,8 @@ class RequestPasswordResetView(APIView):
             phonexist = False
 
         try:
-            user_info_email = AditionalInfoUser.objects.get(email=email)
-            user_by_email = user_info_email.user
+             # Buscar el usuario por email directamente en User
+            user_by_email = User.objects.get(email=email)
             emailexist = True
         except AditionalInfoUser.DoesNotExist:
             emailexist = False
