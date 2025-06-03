@@ -38,4 +38,5 @@ def send_OTP_email(user,otp):
         )
         return response
     except ClientError as e:
-        raise Exception(f"Error al enviar el correo de bienvenida: {e.response['Error']['Message']}")
+        # Aquí devuelves un dict sin MessageId, para que el llamador sepa que falló
+        return {'Error': e.response['Error']['Message']}

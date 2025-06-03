@@ -77,19 +77,25 @@ class GenerateAndSendVerificationCodeView(APIView):
                 aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
                 region_name=settings.AWS_REGION
             )
-            sns_client.publish(
+            response = sns_client.publish(
                 PhoneNumber=f"+51{phone_number}",
                 Message=f"Tu código de verificación de NutriScan es {verification_code}. Expira en 10 minutos"
             )
-            sms_sent = True
+            if response.get('MessageId'):
+                sms_sent = True
+            else:
+                sms_error = _("No se pudo enviar el código por SMS.")
         except Exception as e:
             logger.error(f"Error al enviar SMS: {str(e)}")
             sms_error = _("No se pudo enviar el código por SMS.")
 
         # Envío Correo
         try:
-            send_OTP_email(user, verification_code)
-            email_sent = True
+            email_response = send_OTP_email(user, verification_code)
+            if email_response.get('MessageId'):
+                email_sent = True
+            else:
+                email_error = _("No se pudo enviar el correo electrónico.")
         except Exception as e:
             logger.error(f"Error al enviar correo: {str(e)}")
             email_error = _("No se pudo enviar el correo electrónico.")
@@ -107,14 +113,14 @@ class GenerateAndSendVerificationCodeView(APIView):
                 "codigo": "parcial" if not (sms_sent and email_sent) else "exito",
                 "mensaje": _("Código enviado con éxito.") if sms_sent and email_sent else _("Hubo problemas en algunos envíos."),
                 "sms_enviado": sms_sent,
-                "email_enviado": email_sent,
+                "correo_enviado": email_sent,
                 "sms_error": sms_error,
-                "email_error": email_error
+                "correo_error": email_error
             }, status=status.HTTP_200_OK)
         else:
             return Response({
                 "codigo": "error_envio_ambos",
                 "mensaje": _("No se pudo enviar el código ni por SMS ni por correo."),
                 "sms_error": sms_error,
-                "email_error": email_error
+                "correo_error": email_error
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
