@@ -29,10 +29,10 @@ class RequestPasswordResetView(APIView):
             phonexist = False
 
         try:
-             # Buscar el usuario por email directamente en User
+            # Buscar el usuario por email directamente en User
             user_by_email = User.objects.get(email=email)
             emailexist = True
-        except AditionalInfoUser.DoesNotExist:
+        except User.DoesNotExist:
             emailexist = False
 
         # Verifica que el usuario del teléfono y del correo sean el mismo
@@ -88,4 +88,4 @@ class RequestPasswordResetView(APIView):
                 "mensaje": "No se pudo enviar el correo electrónico. Intenta más tarde."
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        return Response({"message": "Código de restablecimiento de contraseña enviado exitosamente por SMS y correo electrónico."}, status=status.HTTP_200_OK)
+        return Response({"mensaje": "Código de restablecimiento de contraseña enviado exitosamente por SMS y correo electrónico."}, status=status.HTTP_200_OK)
