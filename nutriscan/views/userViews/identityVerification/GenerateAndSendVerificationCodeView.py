@@ -11,6 +11,8 @@ from rest_framework import status
 from ....models import VerificationCode, AditionalInfoUser
 from django.utils.translation import gettext_lazy as _
 
+import botocore.exceptions
+
 logger = logging.getLogger(__name__)
 
 from ....utils.SendotpByEmail import send_OTP_email
@@ -82,7 +84,7 @@ class GenerateAndSendVerificationCodeView(APIView):
                 Message=f"Tu código de verificación de NutriScan es {verification_code}. Expira en 10 minutos"
             )
             sms_sent = True
-        except boto3.exceptions.Boto3Error as e:
+        except botocore.exceptions.ClientError as e:
             logger.error(f"Error al enviar SMS: {str(e)}")
             sms_error = _("No se pudo enviar el código por SMS.")
             sms_sent = False
@@ -94,7 +96,7 @@ class GenerateAndSendVerificationCodeView(APIView):
         try:
             send_OTP_email(user, verification_code)
             email_sent = True
-        except boto3.exceptions.Boto3Error as e:
+        except botocore.exceptions.ClientError as e:
             logger.error(f"Error al enviar correo: {str(e)}")
             email_error = _("No se pudo enviar el correo electrónico.")
             email_sent = False
