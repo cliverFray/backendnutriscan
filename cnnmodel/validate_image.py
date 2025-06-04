@@ -108,11 +108,27 @@ class ValidateImageView(APIView):
             return Response({"valid": False, "message": "Evita accesorios como gorros o gafas."}, status=400)
 
         # 🟢 Estimar edad usando DeepFace
+        # 🟢 Estimar edad usando DeepFace directamente con la imagen completa
+        # 🟩 Estimar edad usando DeepFace directamente con la imagen completa
         try:
-            analysis = DeepFace.analyze(face_crop, actions=['age'], enforce_detection=False)
+            # DeepFace espera imágenes en formato BGR (como OpenCV), así que convertimos nuevamente
+            img_bgr = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
+            
+            # Usamos DeepFace para analizar la edad directamente desde la imagen completa
+            analysis = DeepFace.analyze(
+                img_bgr,
+                actions=['age'],
+                enforce_detection=True  # Que detecte el rostro por su cuenta
+            )
             edad_estimado = analysis['age']
+
         except Exception as e:
-            return Response({"valid": False, "message": f"No se pudo estimar la edad: {str(e)}"}, status=500)
+            # Si falla la detección o el análisis, informamos
+            return Response({
+                "valid": False,
+                "message": f"No se pudo estimar la edad automáticamente: {str(e)}"
+            }, status=500)
+
 
         # 🟢 Edad real
         # Calcular edad real
