@@ -72,9 +72,9 @@ class ValidateImageView(APIView):
         # Detección de rostros
         faces = detector.detect_faces(img_rgb)
         if not faces:
-            return Response({"valid": False, "message": "No se detectó ningún rostro en la imagen."})
+            return Response({"valid": False, "message": "No se detectó ningún rostro en la imagen."}, status=400)
         if len(faces) > 1:
-            return Response({"valid": False, "message": "Asegúrate de que solo un niño esté en la imagen."})
+            return Response({"valid": False, "message": "Asegúrate de que solo un niño esté en la imagen."}, status=400)
 
         # Validar orientación y recorte
         largest_face = max(faces, key=lambda face: face['box'][2] * face['box'][3])
@@ -89,12 +89,12 @@ class ValidateImageView(APIView):
         left_eye, right_eye, nose = keypoints['left_eye'], keypoints['right_eye'], keypoints['nose']
         eye_center_x = (left_eye[0] + right_eye[0]) / 2
         if abs(eye_center_x - nose[0]) > 10:
-            return Response({"valid": False, "message": "Asegúrate de que el niño mire directamente a la cámara."})
+            return Response({"valid": False, "message": "Asegúrate de que el niño mire directamente a la cámara."}, status=400)
         if y < 10:
-            return Response({"valid": False, "message": "Mantén la cámara a la altura de los ojos del niño."})
+            return Response({"valid": False, "message": "Mantén la cámara a la altura de los ojos del niño."}, status=400)
         forehead_y = keypoints['left_eye'][1] - 0.3 * (keypoints['left_eye'][1] - keypoints['nose'][1])
         if forehead_y < y:
-            return Response({"valid": False, "message": "Evita accesorios como gorros o gafas."})
+            return Response({"valid": False, "message": "Evita accesorios como gorros o gafas."}, status=400)
 
         # 🟢 Estimar edad usando DeepFace
         try:
@@ -111,11 +111,11 @@ class ValidateImageView(APIView):
             return Response({
                 "valid": False,
                 "message": f"La edad estimada ({edad_estimado}) no coincide con la edad real del niño ({edad_real})."
-            })
+            }, status=400)
 
         return Response({
             "valid": True,
             "message": "La imagen es válida y la edad coincide.",
             "edad_real": edad_real,
             "edad_estimada": edad_estimado
-        })
+        }, status=200)
