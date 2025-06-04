@@ -92,7 +92,7 @@ urlpatterns = [
     path('children/<int:child_id>/detection-chart/', DetectionCategoryChartView.as_view(), name='detection_category_chart'),
 
     path('detections/history/', DetectionHistoryView.as_view(), name='detection_history'),
-    path('validate-image/', ValidateImageView.as_view(), name='validate_image'),
+    path('validate-image/<int:child_id>/', ValidateImageView.as_view(), name='validate_image'),
     path('user/profile/', UserProfileView.as_view(), name='user_profile'),
     path('user/update-info/', UserProfileRetrieveView.as_view(), name='user-update-info'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),

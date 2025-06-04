@@ -34,7 +34,7 @@ class ValidateImageView(APIView):
 
     def post(self, request):
         # Validar parámetros requeridos
-        child_id = request.data.get('childId')
+        child_id = request.data.get('child_id')
         if not child_id:
             return Response({"valid": False, "message": "Se requiere el ID del niño."}, status=400)
 
