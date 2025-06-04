@@ -14,6 +14,11 @@ from deepface import DeepFace
 # Modelos de tu backend
 from nutriscan.models import Child
 
+#para calcular eda
+from datetime import timedelta
+from django.utils import timezone
+from dateutil.relativedelta import relativedelta  # Nuevo: para cálculo exacto de edad
+
 # Procesar HEIC
 import pillow_heif
 pillow_heif.register_heif_opener()
@@ -25,8 +30,13 @@ MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
 TARGET_SIZE = (224, 224)
 
 def calcular_edad(fecha_nacimiento):
-    hoy = date.today()
-    return hoy.year - fecha_nacimiento.year - ((hoy.month, hoy.day) < (fecha_nacimiento.month, fecha_nacimiento.day))
+    try:
+        ahora = timezone.now().date()
+        edad = relativedelta(ahora, fecha_nacimiento).years
+        return edad
+    except Exception as e:
+        # Devuelve -1 o lanza la excepción, según prefieras
+        return -1
 
 class ValidateImageView(APIView):
     permission_classes = [IsAuthenticated]
@@ -104,7 +114,10 @@ class ValidateImageView(APIView):
             return Response({"valid": False, "message": f"No se pudo estimar la edad: {str(e)}"}, status=500)
 
         # 🟢 Edad real
+        # Calcular edad real
         edad_real = calcular_edad(child.childBirthDate)
+        if edad_real < 0:
+            return Response({"valid": False, "message": "Error al calcular la edad real."}, status=500)
 
         # 🟢 Comparar edad estimada y real (con margen de 3 años)
         if abs(edad_real - edad_estimado) > 3:
