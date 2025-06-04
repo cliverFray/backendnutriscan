@@ -12,7 +12,7 @@ import io
 from deepface import DeepFace
 
 # Modelos de tu backend
-from ..nutriscan.models import Child
+from nutriscan.models import Child
 
 # Procesar HEIC
 import pillow_heif
