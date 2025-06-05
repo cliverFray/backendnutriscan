@@ -11,7 +11,7 @@ from datetime import date
 import io
 from datetime import timedelta
 from django.utils import timezone
-from dateutil.relativedelta import relativedelta  # Para cálculo de edad exacta
+from dateutil.relativedelta import relativedelta
 
 import pillow_heif
 pillow_heif.register_heif_opener()
@@ -23,12 +23,6 @@ from django.conf import settings
 # Modelos de tu backend
 from nutriscan.models import Child
 
-# Inicializar detector de rostros
-detector = MTCNN()
-
-MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
-TARGET_SIZE = (224, 224)
-
 # Inicializar cliente de Rekognition
 rekognition = boto3.client(
     'rekognition',
@@ -36,6 +30,12 @@ rekognition = boto3.client(
     aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
     region_name=settings.AWS_REGION
 )
+
+# Inicializar detector de rostros
+detector = MTCNN()
+
+MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
+TARGET_SIZE = (224, 224)
 
 def calcular_edad(fecha_nacimiento):
     try:
@@ -51,14 +51,12 @@ def estimar_edad_rekognition(image_bytes):
         Attributes=['ALL']
     )
     if not response['FaceDetails']:
-        return -1  # No rostro detectado
+        return -1, None  # No rostro detectado
 
-    # Tomamos el primer rostro detectado
     face = response['FaceDetails'][0]
     age_range = face['AgeRange']
-    # Promedio del rango estimado
     estimated_age = (age_range['Low'] + age_range['High']) / 2
-    return estimated_age
+    return estimated_age, face
 
 class ValidateImageView(APIView):
     permission_classes = [IsAuthenticated]
@@ -97,37 +95,24 @@ class ValidateImageView(APIView):
                 return Response({"valid": False, "message": "Imagen no válida."}, status=400)
             img_rgb = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB)
 
-        # Detección de rostros con MTCNN
+        # Detección de rostros con MTCNN (asegurar solo 1 rostro)
         faces = detector.detect_faces(img_rgb)
         if not faces:
             return Response({"valid": False, "message": "No se detectó ningún rostro en la imagen."}, status=400)
         if len(faces) > 1:
             return Response({"valid": False, "message": "Asegúrate de que solo un niño esté en la imagen."}, status=400)
 
-        # Validar orientación y recorte
+        # Recortar rostro para consistencia
         largest_face = max(faces, key=lambda face: face['box'][2] * face['box'][3])
         x, y, w, h = largest_face['box']
         face_crop = img_rgb[y:y + h, x:x + w]
-
         face_img = Image.fromarray(face_crop)
         face_img = ImageOps.pad(face_img, TARGET_SIZE, method=Image.Resampling.LANCZOS)
 
-        # Validar orientación
-        keypoints = largest_face['keypoints']
-        left_eye, right_eye, nose = keypoints['left_eye'], keypoints['right_eye'], keypoints['nose']
-        eye_center_x = (left_eye[0] + right_eye[0]) / 2
-        if abs(eye_center_x - nose[0]) > 10:
-            return Response({"valid": False, "message": "Asegúrate de que el niño mire directamente a la cámara."}, status=400)
-        if y < 10:
-            return Response({"valid": False, "message": "Mantén la cámara a la altura de los ojos del niño."}, status=400)
-        forehead_y = keypoints['left_eye'][1] - 0.3 * (keypoints['left_eye'][1] - keypoints['nose'][1])
-        if forehead_y < y:
-            return Response({"valid": False, "message": "Evita accesorios como gorros o gafas."}, status=400)
-
-        # 🟢 Estimar edad usando Amazon Rekognition
+        # Estimar edad y obtener detalles con Rekognition
         try:
-            edad_estimado = estimar_edad_rekognition(image_bytes)
-            if edad_estimado == -1:
+            edad_estimado, face_detail = estimar_edad_rekognition(image_bytes)
+            if edad_estimado == -1 or face_detail is None:
                 return Response({
                     "valid": False,
                     "message": "No se pudo estimar la edad automáticamente (sin rostro o error de Rekognition)."
@@ -138,23 +123,41 @@ class ValidateImageView(APIView):
                 "message": f"Error en la estimación de edad: {str(e)}"
             }, status=500)
 
-        # Validar que la edad sea infantil (ejemplo: menor de 14)
+        # Validar accesorios
+        if any(acc['Type'] in ['Sunglasses', 'Glasses'] for acc in face_detail['Accessories']):
+            return Response({"valid": False, "message": "Por favor, retira las gafas del niño."}, status=400)
+
+        if any(acc['Type'] == 'Hat' for acc in face_detail['Accessories']):
+            return Response({"valid": False, "message": "Por favor, retira el gorro del niño."}, status=400)
+
+        # Validar orientación de la cabeza (frente, no perfil extremo)
+        pose_yaw = face_detail['Pose']['Yaw']
+        if abs(pose_yaw) > 20:  # Perfil exagerado
+            return Response({
+                "valid": False,
+                "message": "La cabeza del niño está demasiado girada. Asegúrate de que esté de frente."
+            }, status=400)
+
+        # Validar que sea un niño (ejemplo: menor de 14)
         if edad_estimado > 14:
             return Response({
                 "valid": False,
                 "message": f"La imagen parece de una persona mayor ({edad_estimado} años aprox.). Sube solo fotos de niños."
             }, status=400)
 
-        # 🟢 Edad real
+        # Edad real
+        # Validar edad: debe estar dentro del rango estimado ±3 años
+        edad_min = int(face_detail['AgeRange']['Low'])
+        edad_max = int(face_detail['AgeRange']['High'])
         edad_real = calcular_edad(child.childBirthDate)
         if edad_real < 0:
             return Response({"valid": False, "message": "Error al calcular la edad real."}, status=500)
 
-        # 🟢 Comparar edad estimada y real (con margen de 3 años)
-        if abs(edad_real - edad_estimado) > 3:
+        # Comparar edad estimada y real (con margen de 3 años)
+        if edad_real < (edad_min - 3) or edad_real > (edad_max + 3):
             return Response({
                 "valid": False,
-                "message": f"La edad estimada ({edad_estimado}) no coincide con la edad real del niño ({edad_real})."
+                "message": f"La edad real del niño ({edad_real}) no está dentro del rango estimado por Rekognition ({edad_min}-{edad_max})."
             }, status=400)
 
         return Response({
