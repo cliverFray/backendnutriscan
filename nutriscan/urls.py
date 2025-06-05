@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from cnnmodel.validate_image_InsightFace import ValidateImageView
+from cnnmodel.validate_image_aws_rekognition import ValidateImageView
 #user
 from .views.userViews.UserRegisterView import UserRegisterView
 from .views.userViews.UserLoginView import UserLoginView
