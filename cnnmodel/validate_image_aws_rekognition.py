@@ -103,15 +103,33 @@ class ValidateImageView(APIView):
             return Response({"valid": False, "message": "Asegúrate de que solo un niño esté en la imagen."}, status=400)
 
         # Recortar rostro para consistencia
-        largest_face = max(faces, key=lambda face: face['box'][2] * face['box'][3])
+        """ largest_face = max(faces, key=lambda face: face['box'][2] * face['box'][3])
         x, y, w, h = largest_face['box']
         face_crop = img_rgb[y:y + h, x:x + w]
         face_img = Image.fromarray(face_crop)
-        face_img = ImageOps.pad(face_img, TARGET_SIZE, method=Image.Resampling.LANCZOS)
+        face_img = ImageOps.pad(face_img, TARGET_SIZE, method=Image.Resampling.LANCZOS) """
+
+        # Convertir imagen y preparar para Rekognition
+        if file_name.endswith('.heic'):
+            heif_img = Image.open(io.BytesIO(image_bytes)).convert('RGB')
+            img_rgb = np.array(heif_img)
+            output_buffer = io.BytesIO()
+            heif_img.save(output_buffer, format='JPEG', quality=90)
+            rekognition_bytes = output_buffer.getvalue()
+        else:
+            np_img = np.frombuffer(image_bytes, np.uint8)
+            img_cv = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
+            if img_cv is None:
+                return Response({"valid": False, "message": "Imagen no válida."}, status=400)
+            img_rgb = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB)
+            img_pil = Image.fromarray(img_rgb)
+            output_buffer = io.BytesIO()
+            img_pil.save(output_buffer, format='JPEG', quality=90)
+            rekognition_bytes = output_buffer.getvalue()
 
         # Estimar edad y obtener detalles con Rekognition
         try:
-            edad_estimado, face_detail = estimar_edad_rekognition(image_bytes)
+            edad_estimado, face_detail = estimar_edad_rekognition(rekognition_bytes)
             if edad_estimado == -1 or face_detail is None:
                 return Response({
                     "valid": False,
