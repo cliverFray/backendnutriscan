@@ -1,4 +1,4 @@
-""" from django.http import JsonResponse
+from django.http import JsonResponse
 from PIL import Image, ImageOps
 import numpy as np
 import cv2
@@ -9,19 +9,19 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from datetime import date
 import io
-#from deepface import DeepFace
+from datetime import timedelta
+from django.utils import timezone
+from dateutil.relativedelta import relativedelta  # Para cálculo de edad exacta
+
+import pillow_heif
+pillow_heif.register_heif_opener()
+
+# Amazon Rekognition
+import boto3
+from django.conf import settings
 
 # Modelos de tu backend
 from nutriscan.models import Child
-
-#para calcular eda
-from datetime import timedelta
-from django.utils import timezone
-from dateutil.relativedelta import relativedelta  # Nuevo: para cálculo exacto de edad
-
-# Procesar HEIC
-import pillow_heif
-pillow_heif.register_heif_opener()
 
 # Inicializar detector de rostros
 detector = MTCNN()
@@ -29,12 +29,13 @@ detector = MTCNN()
 MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
 TARGET_SIZE = (224, 224)
 
-
-#from insightface.app import FaceAnalysis
-
-# Al inicio
-#app_insightface = FaceAnalysis(name='buffalo_l', providers=['CPUExecutionProvider'])
-#app_insightface.prepare(ctx_id=0, det_size=(640, 640))
+# Inicializar cliente de Rekognition
+rekognition = boto3.client(
+    'rekognition',
+    aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+    region_name=settings.AWS_REGION
+)
 
 def calcular_edad(fecha_nacimiento):
     try:
@@ -42,37 +43,36 @@ def calcular_edad(fecha_nacimiento):
         edad = relativedelta(ahora, fecha_nacimiento).years
         return edad
     except Exception as e:
-        # Devuelve -1 o lanza la excepción, según prefieras
         return -1
-    
-# Función de estimación
- def estimar_edad_insightface(image_rgb):
-    img_bgr = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR)
-    faces = app_insightface.get(img_bgr)
-    if not faces:
-        return -1
-    # Usamos la primera cara detectada (InsightFace las ordena por tamaño)
-    edad_estimado = faces[0].age
-    return edad_estimado 
+
+def estimar_edad_rekognition(image_bytes):
+    response = rekognition.detect_faces(
+        Image={'Bytes': image_bytes},
+        Attributes=['ALL']
+    )
+    if not response['FaceDetails']:
+        return -1  # No rostro detectado
+
+    # Tomamos el primer rostro detectado
+    face = response['FaceDetails'][0]
+    age_range = face['AgeRange']
+    # Promedio del rango estimado
+    estimated_age = (age_range['Low'] + age_range['High']) / 2
+    return estimated_age
 
 class ValidateImageView(APIView):
     permission_classes = [IsAuthenticated]
     http_method_names = ['post']
 
     def post(self, request, child_id):
-        # Validar parámetros requeridos
-        #child_id = request.data.get('child_id')
-        # child_id ya viene de la URL
         if not child_id:
             return Response({"valid": False, "message": "Se requiere el ID del niño."}, status=400)
 
-        # Obtener la instancia del niño
         try:
             child = Child.objects.get(childId=child_id)
         except Child.DoesNotExist:
             return Response({"valid": False, "message": "Niño no encontrado."}, status=404)
 
-        # Validar la imagen
         if 'image' not in request.FILES:
             return Response({"valid": False, "message": "No se proporcionó ninguna imagen."}, status=400)
 
@@ -97,7 +97,7 @@ class ValidateImageView(APIView):
                 return Response({"valid": False, "message": "Imagen no válida."}, status=400)
             img_rgb = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB)
 
-        # Detección de rostros
+        # Detección de rostros con MTCNN
         faces = detector.detect_faces(img_rgb)
         if not faces:
             return Response({"valid": False, "message": "No se detectó ningún rostro en la imagen."}, status=400)
@@ -124,37 +124,34 @@ class ValidateImageView(APIView):
         if forehead_y < y:
             return Response({"valid": False, "message": "Evita accesorios como gorros o gafas."}, status=400)
 
-        # 🟢 Estimar edad usando DeepFace
-        # 🟢 Estimar edad usando InsightFace
-         try:
-            edad_estimado = estimar_edad_insightface(img_rgb)
+        # 🟢 Estimar edad usando Amazon Rekognition
+        try:
+            edad_estimado = estimar_edad_rekognition(image_bytes)
             if edad_estimado == -1:
                 return Response({
                     "valid": False,
-                    "message": "No se pudo estimar la edad automáticamente (sin rostro)."
+                    "message": "No se pudo estimar la edad automáticamente (sin rostro o error de Rekognition)."
                 }, status=400)
         except Exception as e:
             return Response({
                 "valid": False,
-                "message": f"No se pudo estimar la edad automáticamente: {str(e)}"
+                "message": f"Error en la estimación de edad: {str(e)}"
             }, status=500)
 
-        except Exception as e:
-            # Si falla la detección o el análisis, informamos
+        # Validar que la edad sea infantil (ejemplo: menor de 14)
+        if edad_estimado > 14:
             return Response({
                 "valid": False,
-                "message": f"No se pudo estimar la edad automáticamente: {str(e)}"
-            }, status=500) 
-
+                "message": f"La imagen parece de una persona mayor ({edad_estimado} años aprox.). Sube solo fotos de niños."
+            }, status=400)
 
         # 🟢 Edad real
-        # Calcular edad real
         edad_real = calcular_edad(child.childBirthDate)
         if edad_real < 0:
             return Response({"valid": False, "message": "Error al calcular la edad real."}, status=500)
 
         # 🟢 Comparar edad estimada y real (con margen de 3 años)
-         if abs(edad_real - edad_estimado) > 3:
+        if abs(edad_real - edad_estimado) > 3:
             return Response({
                 "valid": False,
                 "message": f"La edad estimada ({edad_estimado}) no coincide con la edad real del niño ({edad_real})."
@@ -165,5 +162,4 @@ class ValidateImageView(APIView):
             "message": "La imagen es válida y la edad coincide.",
             "edad_real": edad_real,
             "edad_estimada": edad_estimado
-        }, status=200) 
- """
+        }, status=200)
