@@ -124,11 +124,13 @@ class ValidateImageView(APIView):
             }, status=500)
 
         # Validar accesorios
-        if any(acc['Type'] in ['Sunglasses', 'Glasses'] for acc in face_detail['Accessories']):
+        accessories = face_detail.get('Accessories', [])
+        if any(acc['Type'] in ['Sunglasses', 'Glasses'] for acc in accessories):
             return Response({"valid": False, "message": "Por favor, retira las gafas del niño."}, status=400)
 
-        if any(acc['Type'] == 'Hat' for acc in face_detail['Accessories']):
+        if any(acc['Type'] == 'Hat' for acc in accessories):
             return Response({"valid": False, "message": "Por favor, retira el gorro del niño."}, status=400)
+
 
         # Validar orientación de la cabeza (frente, no perfil extremo)
         pose_yaw = face_detail['Pose']['Yaw']
@@ -147,18 +149,33 @@ class ValidateImageView(APIView):
 
         # Edad real
         # Validar edad: debe estar dentro del rango estimado ±3 años
-        edad_min = int(face_detail['AgeRange']['Low'])
-        edad_max = int(face_detail['AgeRange']['High'])
-        edad_real = calcular_edad(child.childBirthDate)
-        if edad_real < 0:
-            return Response({"valid": False, "message": "Error al calcular la edad real."}, status=500)
+        #edad_min = int(face_detail['AgeRange']['Low'])
+        #edad_max = int(face_detail['AgeRange']['High'])
+        
 
         # Comparar edad estimada y real (con margen de 3 años)
-        if edad_real < (edad_min - 3) or edad_real > (edad_max + 3):
+        try:
+            edad_min = int(face_detail['AgeRange']['Low'])
+            edad_max = int(face_detail['AgeRange']['High'])
+            edad_real = calcular_edad(child.childBirthDate)
+            if edad_real < 0:
+                return Response({"valid": False, "message": "Error al calcular la edad real."}, status=500)
+
+            if edad_real < (edad_min - 3) or edad_real > (edad_max + 3):
+                return Response({
+                    "valid": False,
+                    "message": f"La edad real del niño ({edad_real}) no está dentro del rango estimado por Rekognition ({edad_min}-{edad_max})."
+                }, status=400)
+        except KeyError as e:
             return Response({
                 "valid": False,
-                "message": f"La edad real del niño ({edad_real}) no está dentro del rango estimado por Rekognition ({edad_min}-{edad_max})."
+                "message": f"No se encontró el rango de edad en la respuesta de Rekognition: {str(e)}"
             }, status=400)
+        except Exception as e:
+            return Response({
+                "valid": False,
+                "message": f"Error inesperado: {str(e)}"
+            }, status=500)
 
         return Response({
             "valid": True,
