@@ -118,7 +118,7 @@ class ValidateImageView(APIView):
             analysis = DeepFace.analyze(
                 img_bgr,
                 actions=['age'],
-                enforce_detection=True  # Que detecte el rostro por su cuenta
+                enforce_detection=False  # Que detecte el rostro por su cuenta
             )
             edad_estimado = analysis['age']
 
