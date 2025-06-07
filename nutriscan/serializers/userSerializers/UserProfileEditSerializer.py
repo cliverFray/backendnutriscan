@@ -13,4 +13,5 @@ class AditionalInfoUserDataSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AditionalInfoUser
-        fields = ['user', 'userDNI', 'userPhone', 'userPlace']
+        fields = ['user', 'userDNI', 'userPhone', 'userPlace','is_confirmed']
+        read_only_fields = ['is_confirmed']  #Añade esta línea

@@ -9,6 +9,8 @@ from django.db.models import Q
 from ...serializers.userSerializers.UserProfileEditSerializer import UserDataSerializer, AditionalInfoUserDataSerializer
 from ...models import AditionalInfoUser
 
+from ...utils.VerifyEmailSender import verify_email_sender
+
 class UserProfileUpdateView(APIView):
     permission_classes = [IsAuthenticated]
     http_method_names = ['put']
@@ -28,6 +30,13 @@ class UserProfileUpdateView(APIView):
 
         try:
             with transaction.atomic():
+                # Obtener la info adicional
+                aditional_info = AditionalInfoUser.objects.get(user=user)
+
+                # Verificar si el correo fue actualizado
+                new_email = user_data.get("email")
+                email_changed = new_email and new_email != user.email
+
                 # Si la contraseña está vacía, no actualizarla
                 if not user_data.get("password"):
                     user_data.pop("password", None)
@@ -50,6 +59,12 @@ class UserProfileUpdateView(APIView):
                     aditional_info_serializer.save()
                 else:
                     return Response(aditional_info_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                
+                # Si el correo fue cambiado, poner is_confirmed en False y enviar correo de verificación
+                if email_changed:
+                    aditional_info.is_confirmed = False
+                    aditional_info.save()
+                    verify_email_sender(user)  # Envía el correo de verificación
 
                 response_data = {
                     "user": user_serializer.data,
