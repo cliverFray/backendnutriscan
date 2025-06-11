@@ -25,6 +25,9 @@ from .views.userViews.UserProfileView import UserProfileView
 from .views.userViews.ConfirmAccountView import ConfirmAccountView
 from .views.userViews.ResendConfirmationEmailView import ResendConfirmationEmailView
 
+#correo par al aconfirmacion de correo
+from .views.userViews.ResendVerificationEmal import ResendVerificationEmailView
+
 #child
 from .views.child.ListChildrenView import ListChildrenView
 from .views.child.RegisterChildView import RegisterChildView
@@ -86,6 +89,10 @@ urlpatterns = [
 
     #Confirmar cuenta
     path('confirmar-cuenta/<int:user_id>/', ConfirmAccountView.as_view(), name='confirmar-cuenta'),
+
+    #Confirmar correo
+    path('user/send-verification-email/', ResendVerificationEmailView.as_view(), name='send_verification_email'),
+
 
     #statistycs
     path('children/<int:child_id>/growth-chart/', GrowthChartDataView.as_view(), name='growth_chart_data'),
