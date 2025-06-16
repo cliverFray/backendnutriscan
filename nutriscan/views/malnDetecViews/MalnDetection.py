@@ -13,6 +13,28 @@ from ...utils.recommendationGenerator import RecommendationGenerator
 from datetime import datetime, timedelta
 from django.utils import timezone
 
+from decimal import Decimal
+
+# Función auxiliar para calcular el IMC
+def calcular_imc(peso, talla_cm):
+    if not peso or not talla_cm:
+        return None
+    try:
+        talla_m = float(talla_cm) / 100.0
+        imc = float(peso) / (talla_m ** 2)
+        return round(imc, 2)
+    except (ZeroDivisionError, ValueError):
+        return None
+
+# Clasificación del IMC según referencias generales (puedes ajustar según OMS por edad)
+def clasificar_imc(imc):
+    if imc < 14:
+        return "Desnutrición"
+    elif imc < 16:
+        return "Riesgo"
+    else:
+        return "Normal"
+
 class UploadDetectionImageView(APIView):
     permission_classes = [IsAuthenticated]
     http_method_names = ['post']  # Solo permite POST
@@ -111,9 +133,14 @@ class UploadDetectionImageView(APIView):
                 weight=weight,
                 height=height
             )
+            imc = calcular_imc(weight, height)
+            if imc:
+                imc_category = clasificar_imc(imc)
 
         # Devolver el resultado de la detección y la recomendación
         return Response({
             "detectionResult": readable_result,
-            "immediateRecommendation": immediate_recommendation
+            "immediateRecommendation": immediate_recommendation,
+            "imc": imc,
+            "imcCategory": imc_category
         }, status=status.HTTP_201_CREATED)

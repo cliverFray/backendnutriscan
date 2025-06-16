@@ -39,6 +39,8 @@ from .views.child.GetChildById import RetrieveChildView
 from .views.malnDetecViews.MalnDetection import UploadDetectionImageView
 from .views.malnDetecViews.DetectionHistoryView import DetectionHistoryView
 from .views.malnDetecViews.GenerateNewPresignedUrlView import GenerateNewPresignedUrlView
+from .views.malnDetecViews.CheckDailyDetectionAPIView import CheckDailyDetectionAPIView
+
 
 #Notifications
 from .views.notifications.NotificationView import NotificationView
@@ -92,6 +94,9 @@ urlpatterns = [
 
     #Confirmar correo
     path('user/send-verification-email/', ResendVerificationEmailView.as_view(), name='send_verification_email'),
+
+    #Verificamos que se realice una solo deteccion por dia por niño
+    path('verification/check-detection-today/<int:child_id>/', CheckDailyDetectionAPIView.as_view(), name='check-detection-today'),
 
 
     #statistycs
