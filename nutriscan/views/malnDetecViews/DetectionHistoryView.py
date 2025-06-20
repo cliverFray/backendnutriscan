@@ -35,7 +35,7 @@ class DetectionHistoryView(APIView):
 
     def get(self, request):
         user = request.user
-        detections = MalnutritionDetection.objects.filter(child__user=user).select_related('child')
+        detections = MalnutritionDetection.objects.filter(child__user=user).select_related('child', 'immediate_recommendation')
 
         s3_client = boto3.client(
             's3',
@@ -68,7 +68,9 @@ class DetectionHistoryView(APIView):
                 "detectionResult": detection.detectionResult,
                 "detectionImageUrl": detection.detectionImageUrl,
                 "childId": detection.child.childId,
-                "childName": detection.child.childName
+                "childName": detection.child.childName,
+                "confidence": str(detection.confidence) if detection.confidence is not None else None,
+                "immediateRecommendation": detection.immediate_recommendation.inmediateRecomMessage if hasattr(detection, "immediate_recommendation") and detection.immediate_recommendation else None,
             })
 
         return Response(serialized_data, status=status.HTTP_200_OK)
