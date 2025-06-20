@@ -8,7 +8,7 @@ class RecommendationGenerator:
         result_map = {
             'Con desnutrición': 'Desnutricion severa',
             'Normal': 'Normal',
-            'Riesgo en desnutricion': 'Riesgo desnutricion'
+            'Riesgo en desnutrición': 'Riesgo desnutricion'
         }
         category = result_map.get(detection.detectionResult, "Desconocido")
 
