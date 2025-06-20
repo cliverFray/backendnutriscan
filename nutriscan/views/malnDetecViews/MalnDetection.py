@@ -69,7 +69,7 @@ class UploadDetectionImageView(APIView):
         image_copy = BytesIO(image.read())
         image.seek(0)  # Reiniciar el stream del archivo original para que esté listo para la carga
 
-        detection_result = predict_image(image_copy)
+        """ detection_result = predict_image(image_copy)
 
         if detection_result is None:
             return Response({"error": "No se pudo procesar la imagen con el modelo."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -80,7 +80,21 @@ class UploadDetectionImageView(APIView):
             'N_NORMAL': 'Normal',
             'N_RIESGO_DESNUTRIDO': 'Riesgo en desnutricion'
         }
-        readable_result = result_map.get(detection_result, "desconocido")
+        readable_result = result_map.get(detection_result, "desconocido") """
+        prediction = predict_image(image_copy)
+        if prediction is None:
+            return Response({"error": "No se pudo procesar la imagen con el modelo."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        predicted_label = prediction["label"]
+        confidence = prediction["confidence"]
+
+        result_map = {
+            'N_DESNUTRIDO': 'Con desnutrición',
+            'N_NORMAL': 'Normal',
+            'N_RIESGO_DESNUTRIDO': 'Riesgo en desnutrición'
+        }
+        readable_result = result_map.get(predicted_label, "Desconocido")
+
         
 
         s3_client = boto3.client(
@@ -114,6 +128,7 @@ class UploadDetectionImageView(APIView):
         detection = MalnutritionDetection.objects.create(
             detectionImageUrl=image_url,
             detectionResult=readable_result,
+            confidence=confidence,  # ← Guardamos la precisión
             expirationDate = timezone.localtime(timezone.now() + timedelta(hours=1)),  # Establecer la nueva fecha de expiración
             child=child
         )
@@ -140,6 +155,7 @@ class UploadDetectionImageView(APIView):
         # Devolver el resultado de la detección y la recomendación
         return Response({
             "detectionResult": readable_result,
+            "confidence": confidence,
             "immediateRecommendation": immediate_recommendation,
             "imc": imc,
             "imcCategory": imc_category
