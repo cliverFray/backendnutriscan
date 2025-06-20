@@ -38,6 +38,7 @@ class MalnutritionDetection(models.Model):
     detectionResult = models.CharField(max_length=50)  # Resultado de la detección
     detectionImageUrl = models.URLField(max_length=1000)  # URL de la imagen en S3
     expirationDate = models.DateTimeField(null=True, blank=True)  # Fecha de expiración de la URL
+    confidence = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)  # ← Nuevo campo
     child = models.ForeignKey(Child, on_delete=models.CASCADE, related_name="detections")
 
     def __str__(self):

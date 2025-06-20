@@ -80,7 +80,6 @@ urlpatterns = [
     path('password-reset/verify/', VerifyPasswordResetCodeView.as_view(), name='verify_password_reset_code'),
     path('password-reset/reset/', ResetPasswordView.as_view(), name='reset_password'),
     path('password-reset/resend/', ResendPasswordResetCodeView.as_view(), name='resend_password_reset_code'),
-    #path('notifications/', NotificationView.as_view(), name='notifications'),#falta configurar en EC2 se configura y se prueba
     path('account/delete/', DeleteAccountView.as_view(), name='delete_account'),
     path('user/update/', UserProfileUpdateView.as_view(), name='update-user'),
     path('verification/generate-send-code/', GenerateAndSendVerificationCodeView.as_view(), name='generate_send_verification_code'),

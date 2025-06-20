@@ -52,7 +52,7 @@ def predict_image_from_url(image_url):
         print(f"Error al predecir la imagen: {e}")
         return None
 
-def predict_image(image):
+""" def predict_image(image):
     try:
         
         # Procesar la imagen
@@ -70,4 +70,31 @@ def predict_image(image):
         return class_names[preds.item()]
     except Exception as e:
         print(f"Error al predecir la imagen: {e}")
+        return None """
+
+def predict_image(image):
+    try:
+        # Procesar la imagen
+        image = Image.open(image).convert("RGB")
+        image = test_transform(image).unsqueeze(0).to(device)
+
+        # Realizar la predicción
+        with torch.no_grad():
+            outputs = model(image)
+            probabilities = torch.nn.functional.softmax(outputs[0], dim=0)  # Probabilidades
+            confidence, predicted_idx = torch.max(probabilities, 0)
+
+        # Mapeo de clases
+        class_names = ['N_DESNUTRIDO', 'N_NORMAL', 'N_RIESGO_DESNUTRIDO']
+        predicted_label = class_names[predicted_idx.item()]
+        confidence_percent = round(confidence.item() * 100, 2)  # Redondear a 2 decimales
+
+        return {
+            "label": predicted_label,
+            "confidence": confidence_percent
+        }
+
+    except Exception as e:
+        print(f"Error al predecir la imagen: {e}")
         return None
+
