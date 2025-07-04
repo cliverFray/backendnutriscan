@@ -115,6 +115,16 @@ class NutritionTip(models.Model):
     portion_size = models.CharField(max_length=50, blank=True)  # Tamaño de la porción
     image_url = models.URLField(max_length=255, blank=True)  # Enlace de imagen de S3
     date_created = models.DateTimeField(auto_now_add=True)  # Fecha de creación
+    # Nuevo campo
+    tipo = models.CharField(
+        max_length=50,
+        choices=[
+            ('Nutrición', 'Nutrición'),
+            ('Hidratación', 'Hidratación'),
+            ('Alimentación', 'Alimentación'),
+        ],
+        default='Nutrición'
+    )
 
     def __str__(self):
         return self.title
